@@ -1,0 +1,362 @@
+<!-- UX_JUSTIFICATION: Закрывает JTBD студента/партнёра из UX_RESEARCH §7: карьера как непрерывный слой (не «день карьеры»); фильтры грейд×институт; «Откликнуться в 1 клик» с префиллом профиля Ковалёва А.С. из localStorage → Application Submit Rate / Time-to-Apply. -->
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Карьерный хаб УрФУ: стажировки и вакансии Контур, Сбер, Т-Банк, Синара с откликом в 1 клик." />
+  <title>Карьерный хаб · УрФУ Digital Campus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            malachite: { DEFAULT: '#0A5C36', 50: '#E8F5EE', 100: '#C5E6D4', 600: '#0A5C36', 700: '#084A2B', 800: '#063820' },
+            graphite: { DEFAULT: '#0F172A', soft: '#334155', mute: '#64748B' },
+            crystal: { DEFAULT: '#F8FAFC', dark: '#0B0F19', panel: '#151B2C' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          boxShadow: {
+            crystal: '0 0 0 1px rgba(10,92,54,0.12), 0 12px 40px -12px rgba(15,23,42,0.25)',
+            'crystal-dark': '0 0 0 1px rgba(10,92,54,0.35), 0 16px 48px -12px rgba(0,0,0,0.55)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { color-scheme: light; }
+    .dark { color-scheme: dark; }
+    html { font-feature-settings: 'tnum' 1, 'ss01' 1; }
+    body { font-family: Inter, system-ui, sans-serif; }
+    .logo-mark { color: #0F172A; }
+    .dark .logo-mark { color: #E2E8F0; }
+    .dark .logo-mark .logo-core,
+    .dark .logo-mark .logo-node,
+    .dark .logo-mark .logo-highlight { fill: #1FA86A; }
+    .dark .logo-mark .logo-edges { stroke: #1FA86A; }
+    .job-card { transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms ease; }
+    .job-card:hover { transform: translateY(-2px); }
+    .modal-backdrop { animation: fadeIn 200ms ease; }
+    .modal-panel { animation: slideUp 280ms cubic-bezier(0.22, 1, 0.36, 1); }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) {
+      .job-card, .modal-backdrop, .modal-panel { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-crystal text-slate-900 dark:bg-crystal-dark dark:text-slate-100 antialiased pb-24 md:pb-0">
+
+  <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-crystal-panel/90">
+    <div class="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:h-16 sm:px-6">
+      <a href="../index.html" class="logo-mark flex shrink-0 items-center gap-2.5" aria-label="УрФУ Digital Campus — на главную">
+        <svg class="h-9 w-9" viewBox="0 0 64 64" aria-hidden="true" fill="none">
+          <path d="M32 2.5 L54.5 15.5 V40.5 L32 53.5 L9.5 40.5 V15.5 Z" stroke="currentColor" stroke-width="2.25" stroke-linejoin="miter"/>
+          <path d="M32 10 L46 18 V34 L32 42 L18 34 V18 Z" stroke="currentColor" stroke-width="1.25" opacity="0.55"/>
+          <path class="logo-core" d="M32 16 L40.5 21 V31 L32 36 L23.5 31 V21 Z" fill="#0A5C36"/>
+          <circle class="logo-node" cx="32" cy="26" r="2.6" fill="#0A5C36"/>
+          <g class="logo-edges" stroke="#0A5C36" stroke-width="1.15" opacity="0.9">
+            <line x1="32" y1="16" x2="32" y2="36"/>
+            <line x1="23.5" y1="21" x2="40.5" y2="31"/>
+            <line x1="40.5" y1="21" x2="23.5" y2="31"/>
+          </g>
+          <path class="logo-highlight" d="M32 10 L39 14 L32 16 L25 14 Z" fill="#0A5C36" opacity="0.28"/>
+        </svg>
+        <span class="hidden sm:flex flex-col leading-none">
+          <span class="text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">УрФУ</span>
+          <span class="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-malachite">Digital Campus</span>
+        </span>
+      </a>
+      <nav class="ml-4 hidden items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex" aria-label="Фаза студента">
+        <a href="dashboard.html" class="hover:text-malachite">Дашборд</a>
+        <a href="electives.html" class="hover:text-malachite">Элективы</a>
+        <a href="career.html" class="text-malachite" aria-current="page">Карьера</a>
+      </nav>
+      <div class="ml-auto flex items-center gap-2">
+        <div class="hidden items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-900 sm:flex">
+          <span class="flex h-7 w-7 items-center justify-center rounded-md bg-malachite text-[11px] font-bold text-white">АК</span>
+          <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">РИ-230501</span>
+        </div>
+        <button type="button" id="themeToggle" class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-malachite/40 hover:text-malachite dark:border-slate-700 dark:text-slate-300" aria-label="Переключить тему">
+          <svg class="hidden h-5 w-5 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="block h-5 w-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-malachite">Студент · карьерный хаб</p>
+        <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">Стажировки и вакансии партнёров</h1>
+        <p class="mt-2 max-w-2xl text-sm text-slate-500 dark:text-slate-400 sm:text-base">Контур, Сбер, Т-Банк, Синара — подбор под курс и институт. Отклик подтягивает цифровой профиль из localStorage.</p>
+      </div>
+      <div id="profileChip" class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs dark:border-slate-700 dark:bg-crystal-panel">
+        <p class="font-semibold text-slate-900 dark:text-white">Цифровой профиль</p>
+        <p id="profileSummary" class="mt-1 text-slate-500"></p>
+      </div>
+    </div>
+
+    <div class="mb-4 flex flex-wrap gap-2" id="gradeFilters" role="group" aria-label="Грейд">
+      <button type="button" data-grade="all" class="grade-btn rounded-lg border border-malachite bg-malachite/10 px-3 py-1.5 text-xs font-semibold text-malachite">Все грейды</button>
+      <button type="button" data-grade="Intern" class="grade-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">Intern</button>
+      <button type="button" data-grade="Junior" class="grade-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">Junior</button>
+      <button type="button" data-grade="Middle" class="grade-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">Middle</button>
+    </div>
+    <div class="mb-6 flex flex-wrap gap-2" id="instFilters" role="group" aria-label="Институт">
+      <button type="button" data-inst="all" class="inst-btn rounded-lg border border-malachite bg-malachite/10 px-3 py-1.5 text-xs font-semibold text-malachite">Все институты</button>
+      <button type="button" data-inst="ИРИТ-РТФ" class="inst-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">ИРИТ-РТФ</button>
+      <button type="button" data-inst="ИНМТ" class="inst-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">ИНМТ</button>
+      <button type="button" data-inst="ИнЭУ" class="inst-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">ИнЭУ</button>
+      <button type="button" data-inst="УралЭНИН" class="inst-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">УралЭНИН</button>
+    </div>
+
+    <p id="jobCount" class="mb-4 text-xs font-medium text-slate-500"></p>
+    <div id="jobGrid" class="grid gap-4"></div>
+
+    <section class="mt-10">
+      <h2 class="text-sm font-bold text-slate-900 dark:text-white">Мои отклики</h2>
+      <ul id="applicationsList" class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300"></ul>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-200 bg-slate-900 text-slate-300 dark:border-slate-800">
+    <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:justify-between sm:px-6">
+      <div>
+        <p class="text-lg font-bold text-white">Уральский федеральный университет</p>
+        <p class="mt-1 text-sm text-slate-400">Центр карьеры · ул. Мира, 19</p>
+      </div>
+      <nav class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <a class="hover:text-white" href="dashboard.html">Дашборд</a>
+        <a class="hover:text-white" href="career.html">Карьера</a>
+        <a class="hover:text-white" href="business.html">R&amp;D</a>
+        <a class="hover:text-white" href="media.html">Медиа</a>
+        <a class="hover:text-white" href="../index.html">Главная</a>
+      </nav>
+    </div>
+  </footer>
+
+  <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden dark:border-slate-800 dark:bg-crystal-panel/95" aria-label="Мобильная навигация">
+    <ul class="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 py-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+      <li><a href="../index.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10.5L12 4l8 6.5V20H4z"/></svg>Главная</a></li>
+      <li><a href="dashboard.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h7v7H4zM13 5h7v4h-7zM13 11h7v8h-7zM4 14h7v5H4z"/></svg>Дашборд</a></li>
+      <li><a href="career.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16v12H4zM8 7V5h8v2"/></svg>Карьера</a></li>
+      <li><a href="services.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M5 8h14"/></svg>Сервисы</a></li>
+    </ul>
+  </nav>
+
+  <div id="applyModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="applyTitle">
+    <div class="modal-backdrop absolute inset-0 bg-slate-900/50 backdrop-blur-sm" data-close-apply></div>
+    <div class="relative mx-auto flex min-h-full items-end justify-center px-4 pb-6 pt-16 sm:items-center sm:pb-0">
+      <div class="modal-panel w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-crystal-panel">
+        <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-malachite">Отклик в 1 клик</p>
+          <h2 id="applyTitle" class="mt-0.5 text-lg font-bold text-slate-900 dark:text-white">Подтверждение профиля</h2>
+        </div>
+        <div class="space-y-3 px-5 py-5 text-sm">
+          <p id="applyJobMeta" class="text-slate-500"></p>
+          <dl id="applyProfile" class="rounded-lg bg-slate-50 p-4 space-y-2 dark:bg-slate-900"></dl>
+          <div class="flex flex-wrap gap-2 pt-2">
+            <button type="button" id="confirmApplyBtn" class="rounded-lg bg-malachite px-4 py-2.5 text-sm font-semibold text-white hover:bg-malachite-700">Отправить отклик</button>
+            <button type="button" data-close-apply class="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">Отмена</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="pointer-events-none fixed bottom-24 left-1/2 z-50 hidden -translate-x-1/2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg dark:bg-malachite md:bottom-8" role="status"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const DEFAULT_PROFILE = {
+        fio: 'Ковалёв Артём Сергеевич',
+        short: 'Ковалёв А.С.',
+        group: 'РИ-230501',
+        institute: 'ИРИТ-РТФ',
+        course: 3,
+        program: '09.03.04 Программная инженерия',
+        email: 'a.s.kovalev@urfu.me',
+        skills: ['Python', 'Go', 'PostgreSQL', 'Docker', 'ML basics'],
+        gpa: 4.7,
+        github: 'github.com/akovalev-urfu',
+      };
+
+      function ensureProfile() {
+        let raw = localStorage.getItem('urfu-student-profile');
+        if (!raw) {
+          localStorage.setItem('urfu-student-profile', JSON.stringify(DEFAULT_PROFILE));
+          return { ...DEFAULT_PROFILE };
+        }
+        try {
+          return { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
+        } catch {
+          localStorage.setItem('urfu-student-profile', JSON.stringify(DEFAULT_PROFILE));
+          return { ...DEFAULT_PROFILE };
+        }
+      }
+
+      const JOBS = [
+        { id: 'kontur-intern', partner: 'СКБ Контур', title: 'Стажёр Backend (Go)', grade: 'Intern', institutes: ['ИРИТ-РТФ'], format: 'Стажировка · гибрид', salary: '45–60 тыс. ₽', deadline: '15.11.2025', stack: 'Go, PostgreSQL, gRPC', city: 'Екатеринбург' },
+        { id: 'kontur-junior', partner: 'СКБ Контур', title: 'Junior Frontend Engineer', grade: 'Junior', institutes: ['ИРИТ-РТФ'], format: 'Full-time', salary: '90–130 тыс. ₽', deadline: '30.11.2025', stack: 'TypeScript, React, Vite', city: 'Екатеринбург / remote' },
+        { id: 'sber-ml', partner: 'Сбер', title: 'ML Intern · риск-модели', grade: 'Intern', institutes: ['ИРИТ-РТФ', 'ИнЭУ'], format: 'Стажировка', salary: '50–70 тыс. ₽', deadline: '20.11.2025', stack: 'Python, CatBoost, SQL', city: 'Екатеринбург' },
+        { id: 'sber-middle', partner: 'Сбер', title: 'Middle Data Engineer', grade: 'Middle', institutes: ['ИРИТ-РТФ'], format: 'Full-time', salary: '180–240 тыс. ₽', deadline: '10.12.2025', stack: 'Airflow, Spark, ClickHouse', city: 'Екатеринбург' },
+        { id: 'tbank-qa', partner: 'Т-Банк', title: 'Junior QA Automation', grade: 'Junior', institutes: ['ИРИТ-РТФ'], format: 'Full-time · remote-friendly', salary: '100–140 тыс. ₽', deadline: '25.11.2025', stack: 'Java/Kotlin, Selenium, Allure', city: 'Екатеринбург / Москва' },
+        { id: 'tbank-product', partner: 'Т-Банк', title: 'Product Analyst Intern', grade: 'Intern', institutes: ['ИнЭУ', 'ИРИТ-РТФ'], format: 'Стажировка', salary: '55–75 тыс. ₽', deadline: '05.12.2025', stack: 'SQL, Python, A/B', city: 'Екатеринбург' },
+        { id: 'sinara-iot', partner: 'Синара', title: 'Инженер Industrial IoT', grade: 'Junior', institutes: ['ИРИТ-РТФ', 'УралЭНИН'], format: 'Full-time', salary: '110–150 тыс. ₽', deadline: '18.11.2025', stack: 'OPC UA, Edge, MQTT', city: 'Екатеринбург' },
+        { id: 'sinara-mat', partner: 'Синара', title: 'Инженер материалов · Middle', grade: 'Middle', institutes: ['ИНМТ'], format: 'Full-time', salary: '160–210 тыс. ₽', deadline: '01.12.2025', stack: 'СЭМ, сплавы, ТОиР', city: 'Екатеринбург' },
+        { id: 'kontur-design', partner: 'СКБ Контур', title: 'Intern UX-исследователь', grade: 'Intern', institutes: ['ИРИТ-РТФ', 'ИнЭУ'], format: 'Стажировка', salary: '40–55 тыс. ₽', deadline: '12.11.2025', stack: 'Интервью, CJM, Figma', city: 'Екатеринбург' },
+      ];
+
+      let grade = 'all';
+      let institute = 'all';
+      let activeJob = null;
+      const profile = ensureProfile();
+      let applications = JSON.parse(localStorage.getItem('urfu-career-apps') || '[]');
+
+      const html = document.documentElement;
+      const storedTheme = localStorage.getItem('urfu-theme');
+      if (storedTheme === 'dark' || (!storedTheme && matchMedia('(prefers-color-scheme: dark)').matches)) {
+        html.classList.add('dark');
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        localStorage.setItem('urfu-theme', html.classList.toggle('dark') ? 'dark' : 'light');
+      });
+
+      const modal = document.getElementById('applyModal');
+
+      function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.remove('hidden');
+        clearTimeout(showToast._id);
+        showToast._id = setTimeout(() => t.classList.add('hidden'), 3200);
+      }
+
+      document.getElementById('profileSummary').textContent =
+        `${profile.short} · ${profile.institute} · ${profile.course} курс · GPA ${profile.gpa}`;
+
+      function renderApps() {
+        const list = document.getElementById('applicationsList');
+        if (!applications.length) {
+          list.innerHTML = '<li class="text-slate-400">Пока нет откликов — выберите вакансию ниже.</li>';
+          return;
+        }
+        list.innerHTML = applications.map((a) =>
+          `<li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-crystal-panel">
+            <span><span class="font-semibold text-slate-900 dark:text-white">${a.partner}</span> — ${a.title}</span>
+            <span class="text-[11px] font-medium text-malachite">${a.status} · ${a.at}</span>
+          </li>`
+        ).join('');
+      }
+
+      function openApply(job) {
+        activeJob = job;
+        document.getElementById('applyJobMeta').textContent = `${job.partner} · ${job.title} · ${job.grade}`;
+        document.getElementById('applyProfile').innerHTML = `
+          <div class="flex justify-between gap-4"><dt class="text-slate-400">ФИО</dt><dd class="font-medium text-slate-900 dark:text-white">${profile.fio}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-slate-400">Группа</dt><dd class="font-medium">${profile.group}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-slate-400">Институт</dt><dd class="font-medium">${profile.institute}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-slate-400">Программа</dt><dd class="font-medium text-right">${profile.program}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-slate-400">Email</dt><dd class="font-medium">${profile.email}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-slate-400">Стек</dt><dd class="font-medium text-right">${profile.skills.join(', ')}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-slate-400">GitHub</dt><dd class="font-medium">${profile.github}</dd></div>
+        `;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeApply() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        activeJob = null;
+      }
+
+      function renderJobs() {
+        const list = JOBS.filter((j) =>
+          (grade === 'all' || j.grade === grade) &&
+          (institute === 'all' || j.institutes.includes(institute))
+        );
+        document.getElementById('jobCount').textContent = `Вакансий: ${list.length}`;
+        document.getElementById('jobGrid').innerHTML = list.map((j) => `
+          <article class="job-card rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:flex sm:items-start sm:justify-between sm:gap-6">
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-malachite">${j.partner}</span>
+                <span class="rounded-md border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">${j.grade}</span>
+                ${j.institutes.map((i) => `<span class="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">${i}</span>`).join('')}
+              </div>
+              <h2 class="mt-2 text-base font-bold text-slate-900 dark:text-white">${j.title}</h2>
+              <p class="mt-1 text-sm text-slate-500">${j.format} · ${j.city} · стек: ${j.stack}</p>
+              <p class="mt-2 text-sm font-semibold tabular-nums text-slate-800 dark:text-slate-100">${j.salary} <span class="font-normal text-slate-400">· до ${j.deadline}</span></p>
+            </div>
+            <button type="button" data-apply="${j.id}" class="apply-btn mt-4 shrink-0 rounded-lg bg-malachite px-4 py-2.5 text-sm font-semibold text-white hover:bg-malachite-700 sm:mt-0">Откликнуться в 1 клик</button>
+          </article>
+        `).join('');
+
+        document.querySelectorAll('.apply-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const job = JOBS.find((j) => j.id === btn.dataset.apply);
+            if (job) openApply(job);
+          });
+        });
+      }
+
+      function wireFilter(selector, key, setter) {
+        document.querySelectorAll(selector).forEach((btn) => {
+          btn.addEventListener('click', () => {
+            setter(btn.dataset[key]);
+            document.querySelectorAll(selector).forEach((b) => {
+              const on = b.dataset[key] === (key === 'grade' ? grade : institute);
+              b.classList.toggle('border-malachite', on);
+              b.classList.toggle('bg-malachite/10', on);
+              b.classList.toggle('text-malachite', on);
+              b.classList.toggle('border-slate-200', !on);
+              b.classList.toggle('dark:border-slate-600', !on);
+              b.classList.toggle('text-slate-600', !on);
+            });
+            renderJobs();
+          });
+        });
+      }
+
+      wireFilter('.grade-btn', 'grade', (v) => { grade = v; });
+      wireFilter('.inst-btn', 'inst', (v) => { institute = v; });
+
+      modal.querySelectorAll('[data-close-apply]').forEach((el) => el.addEventListener('click', closeApply));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeApply();
+      });
+
+      document.getElementById('confirmApplyBtn').addEventListener('click', () => {
+        if (!activeJob) return;
+        const entry = {
+          id: activeJob.id,
+          partner: activeJob.partner,
+          title: activeJob.title,
+          status: 'Отправлено',
+          at: new Date().toLocaleString('ru-RU'),
+          profile: profile.short,
+        };
+        applications = [entry, ...applications.filter((a) => a.id !== activeJob.id)];
+        localStorage.setItem('urfu-career-apps', JSON.stringify(applications));
+        showToast('Отклик ' + profile.short + ' → ' + activeJob.partner);
+        closeApply();
+        renderApps();
+      });
+
+      renderJobs();
+      renderApps();
+    })();
+  </script>
+</body>
+</html>

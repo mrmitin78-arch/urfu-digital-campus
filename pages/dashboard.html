@@ -1,0 +1,465 @@
+<!-- UX_JUSTIFICATION: Закрывает барьеры «Расписание как PDF/разрозненные системы» и «Отсутствие персонализации» из UX_RESEARCH §Группа 2: Today View ≤2 клика (пары, аудитории, таймер, изменения); прогресс ECTS + канбан дедлайнов держат Habit Score; шорткаты к справкам/элективам ведут Happy Path Login→Today→Service/Trajectory. NSM: WAU/MAU ≥60%, расписание ≤5с. -->
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Дашборд студента УрФУ — расписание ИРИТ-РТФ, кредиты ECTS, дедлайны лабораторных." />
+  <title>Дашборд студента · УрФУ Digital Campus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            malachite: { DEFAULT: '#0A5C36', 50: '#E8F5EE', 100: '#C5E6D4', 600: '#0A5C36', 700: '#084A2B', 800: '#063820' },
+            graphite: { DEFAULT: '#0F172A', soft: '#334155', mute: '#64748B' },
+            crystal: { DEFAULT: '#F8FAFC', dark: '#0B0F19', panel: '#151B2C' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          boxShadow: {
+            crystal: '0 0 0 1px rgba(10,92,54,0.12), 0 12px 40px -12px rgba(15,23,42,0.25)',
+            'crystal-dark': '0 0 0 1px rgba(10,92,54,0.35), 0 16px 48px -12px rgba(0,0,0,0.55)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { color-scheme: light; }
+    .dark { color-scheme: dark; }
+    html { font-feature-settings: 'tnum' 1, 'ss01' 1; }
+    body { font-family: Inter, system-ui, sans-serif; }
+    .logo-mark { color: #0F172A; }
+    .dark .logo-mark { color: #E2E8F0; }
+    .dark .logo-mark .logo-core,
+    .dark .logo-mark .logo-node,
+    .dark .logo-mark .logo-highlight { fill: #1FA86A; }
+    .dark .logo-mark .logo-edges { stroke: #1FA86A; }
+    .pair-live { box-shadow: inset 3px 0 0 #0A5C36; }
+    .dark .pair-live { box-shadow: inset 3px 0 0 #1FA86A; }
+    .progress-fill { transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1); }
+    .kanban-card { transition: transform 180ms ease, border-color 180ms ease; }
+    .kanban-card:hover { transform: translateY(-2px); }
+    @media (prefers-reduced-motion: reduce) {
+      .progress-fill, .kanban-card { transition: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-crystal text-slate-900 dark:bg-crystal-dark dark:text-slate-100 antialiased pb-24 md:pb-0">
+
+  <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-crystal-panel/90">
+    <div class="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:h-16 sm:px-6">
+      <a href="../index.html" class="logo-mark flex shrink-0 items-center gap-2.5" aria-label="УрФУ Digital Campus — на главную">
+        <svg class="h-9 w-9" viewBox="0 0 64 64" aria-hidden="true" fill="none">
+          <path d="M32 2.5 L54.5 15.5 V40.5 L32 53.5 L9.5 40.5 V15.5 Z" stroke="currentColor" stroke-width="2.25" stroke-linejoin="miter"/>
+          <path d="M32 10 L46 18 V34 L32 42 L18 34 V18 Z" stroke="currentColor" stroke-width="1.25" opacity="0.55"/>
+          <path class="logo-core" d="M32 16 L40.5 21 V31 L32 36 L23.5 31 V21 Z" fill="#0A5C36"/>
+          <circle class="logo-node" cx="32" cy="26" r="2.6" fill="#0A5C36"/>
+          <g class="logo-edges" stroke="#0A5C36" stroke-width="1.15" opacity="0.9">
+            <line x1="32" y1="16" x2="32" y2="36"/>
+            <line x1="23.5" y1="21" x2="40.5" y2="31"/>
+            <line x1="40.5" y1="21" x2="23.5" y2="31"/>
+          </g>
+          <path class="logo-highlight" d="M32 10 L39 14 L32 16 L25 14 Z" fill="#0A5C36" opacity="0.28"/>
+        </svg>
+        <span class="hidden sm:flex flex-col leading-none">
+          <span class="text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">УрФУ</span>
+          <span class="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-malachite">Digital Campus</span>
+        </span>
+      </a>
+      <nav class="ml-4 hidden items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex" aria-label="Фаза студента">
+        <a href="dashboard.html" class="text-malachite" aria-current="page">Дашборд</a>
+        <a href="services.html" class="hover:text-malachite">Сервисы</a>
+        <a href="electives.html" class="hover:text-malachite">Элективы</a>
+        <a href="career.html" class="hover:text-malachite">Карьера</a>
+      </nav>
+      <div class="ml-auto flex items-center gap-2">
+        <div class="hidden items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-900 sm:flex">
+          <span class="flex h-7 w-7 items-center justify-center rounded-md bg-malachite text-[11px] font-bold text-white">АК</span>
+          <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">РИ-230501</span>
+        </div>
+        <button type="button" id="themeToggle" class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-malachite/40 hover:text-malachite dark:border-slate-700 dark:text-slate-300" aria-label="Переключить тему">
+          <svg id="iconSun" class="hidden h-5 w-5 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg id="iconMoon" class="block h-5 w-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-malachite">Студент · ИРИТ-РТФ · 3 курс</p>
+        <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">Здравствуйте, Артём Ковалёв</h1>
+        <p class="mt-2 max-w-2xl text-sm text-slate-500 dark:text-slate-400 sm:text-base">09.03.04 Программная инженерия · группа РИ-230501 · осенний семестр 2025/26</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <a href="services.html" class="inline-flex items-center gap-2 rounded-lg bg-malachite px-4 py-2.5 text-sm font-semibold text-white hover:bg-malachite-700">Заказать справку</a>
+        <a href="electives.html" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-malachite/40 dark:border-slate-600 dark:text-slate-200">Элективы</a>
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-[1.35fr_1fr] lg:gap-8">
+      <!-- TODAY SCHEDULE -->
+      <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:p-6" aria-labelledby="todayHeading">
+        <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 id="todayHeading" class="text-lg font-bold text-slate-900 dark:text-white">Сегодня</h2>
+            <p id="dayMeta" class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Расписание РИ-230501 · корпус ИРИТ-РТФ</p>
+          </div>
+          <p id="liveTimer" class="rounded-lg border border-malachite/30 bg-malachite/10 px-3 py-1.5 text-xs font-bold tabular-nums text-malachite" aria-live="polite">—</p>
+        </div>
+
+        <div class="mb-5 flex gap-1 overflow-x-auto pb-1" role="tablist" aria-label="Дни недели" id="dayTabs">
+          <!-- filled by JS -->
+        </div>
+
+        <div id="scheduleList" class="space-y-2" role="list" aria-live="polite"></div>
+      </section>
+
+      <!-- PROGRESS -->
+      <aside class="space-y-6">
+        <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:p-6" aria-labelledby="progressHeading">
+          <h2 id="progressHeading" class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Прогресс семестра</h2>
+
+          <div class="mt-5">
+            <div class="mb-2 flex items-end justify-between">
+              <div>
+                <p class="text-xs font-medium text-slate-400">Кредиты ECTS</p>
+                <p class="mt-0.5 text-2xl font-extrabold tabular-nums text-slate-900 dark:text-white"><span id="ectsDone">18</span><span class="text-base font-semibold text-slate-400"> / 30</span></p>
+              </div>
+              <p class="text-sm font-bold tabular-nums text-malachite" id="ectsPct">60%</p>
+            </div>
+            <div class="h-2.5 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800" role="progressbar" aria-valuenow="18" aria-valuemin="0" aria-valuemax="30" aria-label="Кредиты ECTS">
+              <div id="ectsBar" class="progress-fill h-full rounded-lg bg-malachite" style="width:60%"></div>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <div class="mb-2 flex items-end justify-between">
+              <div>
+                <p class="text-xs font-medium text-slate-400">Средний балл (GPA)</p>
+                <p class="mt-0.5 text-2xl font-extrabold tabular-nums text-slate-900 dark:text-white">4.42</p>
+              </div>
+              <p class="text-sm font-bold tabular-nums text-malachite">отлично</p>
+            </div>
+            <div class="h-2.5 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800" role="progressbar" aria-valuenow="88" aria-valuemin="0" aria-valuemax="100" aria-label="Успеваемость">
+              <div class="progress-fill h-full rounded-lg bg-malachite/80" style="width:88%"></div>
+            </div>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Стипендия академическая сохранена · порог 4.0</p>
+          </div>
+
+          <dl class="mt-6 grid grid-cols-3 gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
+            <div class="rounded-lg bg-slate-50 p-3 text-center dark:bg-slate-900/60">
+              <dt class="text-[10px] font-medium uppercase tracking-wider text-slate-400">Сдано</dt>
+              <dd class="mt-1 text-lg font-bold tabular-nums text-slate-900 dark:text-white">6</dd>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-3 text-center dark:bg-slate-900/60">
+              <dt class="text-[10px] font-medium uppercase tracking-wider text-slate-400">В работе</dt>
+              <dd class="mt-1 text-lg font-bold tabular-nums text-malachite">4</dd>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-3 text-center dark:bg-slate-900/60">
+              <dt class="text-[10px] font-medium uppercase tracking-wider text-slate-400">Долги</dt>
+              <dd class="mt-1 text-lg font-bold tabular-nums text-slate-900 dark:text-white">0</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:p-6" aria-labelledby="shortcutsHeading">
+          <h2 id="shortcutsHeading" class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Быстрые действия</h2>
+          <div class="mt-4 grid gap-2">
+            <a href="services.html#certificate" class="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-3 transition hover:border-malachite/40 dark:border-slate-700">
+              <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-malachite/10 text-malachite">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-semibold text-slate-900 dark:text-white">Справка об обучении</span>
+                <span class="block text-xs text-slate-500 dark:text-slate-400">Префилл ФИО · трекер статуса</span>
+              </span>
+              <span class="text-malachite" aria-hidden="true">→</span>
+            </a>
+            <a href="electives.html" class="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-3 transition hover:border-malachite/40 dark:border-slate-700">
+              <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-malachite/10 text-malachite">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h14"/></svg>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-semibold text-slate-900 dark:text-white">Маркетплейс элективов</span>
+                <span class="block text-xs text-slate-500 dark:text-slate-400">12 свободных мест на ИИ-треке</span>
+              </span>
+              <span class="text-malachite" aria-hidden="true">→</span>
+            </a>
+            <a href="services.html#pass" class="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-3 transition hover:border-malachite/40 dark:border-slate-700">
+              <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h3"/></svg>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-semibold text-slate-900 dark:text-white">Заказ пропуска</span>
+                <span class="block text-xs text-slate-500 dark:text-slate-400">Корпус РТФ · Т-2 · ИРИТ</span>
+              </span>
+              <span class="text-slate-400" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <!-- KANBAN DEADLINES -->
+    <section class="mt-8" aria-labelledby="kanbanHeading">
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 id="kanbanHeading" class="text-lg font-bold text-slate-900 dark:text-white">Дедлайны и проекты</h2>
+          <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Канбан текущих лабораторных · перетаскивание статусов по клику</p>
+        </div>
+        <p class="text-xs font-medium text-slate-400">Клик по карточке → следующий статус</p>
+      </div>
+      <div class="grid gap-4 md:grid-cols-3" id="kanbanBoard">
+        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-900/40" data-col="todo">
+          <h3 class="mb-3 flex items-center justify-between px-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+            К сдаче <span class="tabular-nums text-slate-400" data-count>0</span>
+          </h3>
+          <div class="space-y-2" data-list></div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-900/40" data-col="doing">
+          <h3 class="mb-3 flex items-center justify-between px-1 text-xs font-bold uppercase tracking-wider text-malachite">
+            В работе <span class="tabular-nums text-malachite/70" data-count>0</span>
+          </h3>
+          <div class="space-y-2" data-list></div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-900/40" data-col="done">
+          <h3 class="mb-3 flex items-center justify-between px-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+            Сдано <span class="tabular-nums text-slate-400" data-count>0</span>
+          </h3>
+          <div class="space-y-2" data-list></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mt-8 border-t border-slate-200 bg-slate-900 text-slate-300 dark:border-slate-800">
+    <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <p class="text-sm text-slate-400">УрФУ · ИРИТ-РТФ · прототип Digital Campus · Фаза студента</p>
+      <nav class="flex flex-wrap gap-4 text-sm">
+        <a class="hover:text-white" href="../index.html">Главная</a>
+        <a class="hover:text-white" href="services.html">Сервисы</a>
+        <a class="hover:text-white" href="electives.html">Элективы</a>
+      </nav>
+    </div>
+  </footer>
+
+  <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden dark:border-slate-800 dark:bg-crystal-panel/95" aria-label="Мобильная навигация">
+    <ul class="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 py-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+      <li><a href="../index.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10.5L12 4l8 6.5V20H4z"/></svg>Главная</a></li>
+      <li><a href="dashboard.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Дашборд</a></li>
+      <li><a href="services.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>Справки</a></li>
+      <li><a href="electives.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h14"/></svg>Элективы</a></li>
+    </ul>
+  </nav>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const html = document.documentElement;
+      const storedTheme = localStorage.getItem('urfu-theme');
+      if (storedTheme === 'dark' || (!storedTheme && matchMedia('(prefers-color-scheme: dark)').matches)) {
+        html.classList.add('dark');
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        localStorage.setItem('urfu-theme', html.classList.toggle('dark') ? 'dark' : 'light');
+      });
+
+      const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+      const DAY_LABELS = { mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб' };
+      const DAY_FULL = { mon: 'Понедельник', tue: 'Вторник', wed: 'Среда', thu: 'Четверг', fri: 'Пятница', sat: 'Суббота' };
+
+      const SCHEDULE = {
+        mon: [
+          { time: '08:30–10:00', subject: 'Архитектура ПО', type: 'Лекция', room: 'Т-2, ауд. 414', teacher: 'к.т.н. Соколов Д.А.', change: null },
+          { time: '10:15–11:45', subject: 'Базы данных', type: 'Практика', room: 'ИРИТ, ауд. 208', teacher: 'ст. преп. Морозова Е.В.', change: null },
+          { time: '12:00–13:30', subject: 'Сети и телекоммуникации', type: 'Лабораторная', room: 'РТФ, ауд. 312', teacher: 'доц. Кузнецов И.П.', change: 'Аудитория заменена: было РТФ-305' },
+        ],
+        tue: [
+          { time: '10:15–11:45', subject: 'Машинное обучение', type: 'Лекция', room: 'Т-2, ауд. 501', teacher: 'д.т.н. проф. Петров А.Н.', change: null },
+          { time: '12:00–13:30', subject: 'Машинное обучение', type: 'Лабораторная', room: 'ИРИТ, ауд. 115', teacher: 'асс. Лебедева М.С.', change: null },
+          { time: '14:15–15:45', subject: 'Английский язык (проф.)', type: 'Практика', room: 'ГУК, ауд. 216', teacher: 'ст. преп. Уитни Дж.', change: null },
+        ],
+        wed: [
+          { time: '08:30–10:00', subject: 'Операционные системы', type: 'Лекция', room: 'Т-2, ауд. 302', teacher: 'доц. Васильев Р.К.', change: null },
+          { time: '10:15–11:45', subject: 'Операционные системы', type: 'Лабораторная', room: 'ИРИТ, ауд. 220', teacher: 'асс. Новиков П.А.', change: null },
+          { time: '16:00–17:30', subject: 'Проектный практикум (ИТ)', type: 'Проект', room: 'ИРИТ, коворкинг 3', teacher: 'наставник: СКБ Контур', change: null },
+        ],
+        thu: [
+          { time: '10:15–11:45', subject: 'Тестирование ПО', type: 'Практика', room: 'ИРИТ, ауд. 109', teacher: 'ст. преп. Громова О.И.', change: null },
+          { time: '12:00–13:30', subject: 'Криптография', type: 'Лекция', room: 'РТФ, ауд. 401', teacher: 'к.ф.-м.н. Белов С.Ю.', change: 'Пара перенесена с пятницы' },
+          { time: '14:15–15:45', subject: 'Физкультура', type: 'Практика', room: 'УСК УПИ', teacher: 'преп. Сидоров В.М.', change: null },
+        ],
+        fri: [
+          { time: '08:30–10:00', subject: 'Веб-технологии', type: 'Лекция', room: 'Т-2, ауд. 418', teacher: 'доц. Орлова Н.А.', change: null },
+          { time: '10:15–11:45', subject: 'Веб-технологии', type: 'Лабораторная', room: 'ИРИТ, ауд. 207', teacher: 'асс. Фомин К.Д.', change: null },
+          { time: '12:00–13:30', subject: 'Управление проектами', type: 'Семинар', room: 'Т-2, ауд. 110', teacher: 'к.э.н. Андреева Л.В.', change: null },
+        ],
+        sat: [
+          { time: '10:15–11:45', subject: 'НИРС / консультация научрука', type: 'Консультация', room: 'ИРИТ, каб. 512', teacher: 'проф. Петров А.Н.', change: null },
+        ],
+      };
+
+      const TASKS = [
+        { id: 't1', title: 'Лабораторная №5 · Базы данных', course: 'Базы данных', due: '3 ноя', status: 'todo', priority: 'high' },
+        { id: 't2', title: 'Отчёт по ML: классификация CIFAR', course: 'Машинное обучение', due: '5 ноя', status: 'todo', priority: 'high' },
+        { id: 't3', title: 'Лабораторная №3 · Веб: REST API', course: 'Веб-технологии', due: '7 ноя', status: 'doing', priority: 'mid' },
+        { id: 't4', title: 'Спринт 4 · демо для СКБ Контур', course: 'Проектный практикум', due: '8 ноя', status: 'doing', priority: 'high' },
+        { id: 't5', title: 'Эссе: принципы SOLID', course: 'Архитектура ПО', due: '28 окт', status: 'done', priority: 'low' },
+        { id: 't6', title: 'Лабораторная №2 · fork/exec', course: 'Операционные системы', due: '25 окт', status: 'done', priority: 'mid' },
+      ];
+
+      const jsDay = new Date().getDay(); // 0 Sun
+      const map = { 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat', 0: 'mon' };
+      let activeDay = map[jsDay];
+
+      const dayTabs = document.getElementById('dayTabs');
+      const scheduleList = document.getElementById('scheduleList');
+      const dayMeta = document.getElementById('dayMeta');
+      const liveTimer = document.getElementById('liveTimer');
+
+      function parseEndMinutes(timeRange) {
+        const end = timeRange.split('–')[1];
+        const [h, m] = end.split(':').map(Number);
+        return h * 60 + m;
+      }
+      function parseStartMinutes(timeRange) {
+        const start = timeRange.split('–')[0];
+        const [h, m] = start.split(':').map(Number);
+        return h * 60 + m;
+      }
+
+      function nowMinutes() {
+        const d = new Date();
+        return d.getHours() * 60 + d.getMinutes();
+      }
+
+      function formatRemain(mins) {
+        if (mins <= 0) return 'пара закончилась';
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        if (h > 0) return `до конца ${h} ч ${m} мин`;
+        return `до конца ${m} мин`;
+      }
+
+      function renderTabs() {
+        dayTabs.innerHTML = DAY_KEYS.map((k) => {
+          const on = k === activeDay;
+          return `<button type="button" role="tab" aria-selected="${on}" data-day="${k}"
+            class="shrink-0 rounded-lg px-3 py-2 text-sm font-semibold transition ${on
+              ? 'bg-malachite text-white'
+              : 'border border-slate-200 text-slate-600 hover:border-malachite/40 dark:border-slate-600 dark:text-slate-300'}">${DAY_LABELS[k]}</button>`;
+        }).join('');
+        dayTabs.querySelectorAll('[data-day]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            activeDay = btn.dataset.day;
+            renderTabs();
+            renderSchedule();
+          });
+        });
+      }
+
+      function renderSchedule() {
+        const pairs = SCHEDULE[activeDay] || [];
+        const isToday = activeDay === map[jsDay];
+        dayMeta.textContent = `${DAY_FULL[activeDay]} · РИ-230501 · корпус ИРИТ-РТФ / Т-2 / РТФ`;
+        const now = nowMinutes();
+
+        let livePair = null;
+        if (isToday) {
+          livePair = pairs.find((p) => {
+            const s = parseStartMinutes(p.time);
+            const e = parseEndMinutes(p.time);
+            return now >= s && now < e;
+          });
+        }
+
+        if (livePair) {
+          const rem = parseEndMinutes(livePair.time) - now;
+          liveTimer.textContent = `Сейчас: ${livePair.subject} · ${formatRemain(rem)}`;
+          liveTimer.classList.remove('hidden');
+        } else if (isToday) {
+          const next = pairs.find((p) => parseStartMinutes(p.time) > now);
+          liveTimer.textContent = next ? `Следующая: ${next.subject} в ${next.time.split('–')[0]}` : 'Пар больше нет';
+        } else {
+          liveTimer.textContent = `${pairs.length} пар`;
+        }
+
+        if (!pairs.length) {
+          scheduleList.innerHTML = '<p class="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500 dark:border-slate-700">Выходной · пар нет</p>';
+          return;
+        }
+
+        scheduleList.innerHTML = pairs.map((p) => {
+          const s = parseStartMinutes(p.time);
+          const e = parseEndMinutes(p.time);
+          const live = isToday && now >= s && now < e;
+          const done = isToday && now >= e;
+          return `
+          <article class="rounded-lg border border-slate-200 bg-slate-50/60 p-3 dark:border-slate-700 dark:bg-slate-900/40 sm:p-4 ${live ? 'pair-live border-malachite/40 bg-malachite/5 dark:bg-malachite/10' : ''} ${done ? 'opacity-55' : ''}" role="listitem">
+            <div class="flex flex-wrap items-start gap-3">
+              <div class="w-[5.5rem] shrink-0">
+                <p class="text-sm font-bold tabular-nums text-slate-900 dark:text-white">${p.time.split('–')[0]}</p>
+                <p class="text-xs tabular-nums text-slate-400">${p.time.split('–')[1]}</p>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900 dark:text-white sm:text-base">${p.subject}</h3>
+                  <span class="rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-600">${p.type}</span>
+                  ${live ? '<span class="rounded-md bg-malachite px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">сейчас</span>' : ''}
+                </div>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">${p.room} · ${p.teacher}</p>
+                ${p.change ? `<p class="mt-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">⚠ ${p.change}</p>` : ''}
+              </div>
+            </div>
+          </article>`;
+        }).join('');
+      }
+
+      function renderKanban() {
+        const cols = ['todo', 'doing', 'done'];
+        const next = { todo: 'doing', doing: 'done', done: 'todo' };
+        cols.forEach((col) => {
+          const root = document.querySelector(`[data-col="${col}"]`);
+          const list = root.querySelector('[data-list]');
+          const count = root.querySelector('[data-count]');
+          const items = TASKS.filter((t) => t.status === col);
+          count.textContent = String(items.length);
+          const prioCls = {
+            high: 'border-l-malachite',
+            mid: 'border-l-slate-400',
+            low: 'border-l-slate-300 dark:border-l-slate-600',
+          };
+          list.innerHTML = items.map((t) => `
+            <button type="button" data-task="${t.id}" class="kanban-card w-full rounded-lg border border-slate-200 border-l-4 ${prioCls[t.priority]} bg-white p-3 text-left dark:border-slate-600 dark:bg-crystal-panel">
+              <p class="text-sm font-semibold text-slate-900 dark:text-white">${t.title}</p>
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">${t.course} · до ${t.due}</p>
+            </button>
+          `).join('');
+          list.querySelectorAll('[data-task]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const task = TASKS.find((x) => x.id === btn.dataset.task);
+              if (!task) return;
+              task.status = next[task.status];
+              renderKanban();
+            });
+          });
+        });
+      }
+
+      renderTabs();
+      renderSchedule();
+      renderKanban();
+      setInterval(renderSchedule, 30000);
+    })();
+  </script>
+</body>
+</html>

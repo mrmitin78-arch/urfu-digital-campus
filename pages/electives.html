@@ -1,0 +1,538 @@
+<!-- UX_JUSTIFICATION: Закрывает барьер «Элективы без продуктовой витрины» из UX_RESEARCH §Группа 2: маркетплейс с рейтингами профессоров, кредитами, местами; фильтры по направлению/кредитам/сложности; JS-проверка конфликта расписания перед записью. Happy Path Trajectory design; снижает откаты и случайный выбор. -->
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Маркетплейс элективов УрФУ — ИИ, Go, продукт, кибербезопасность. Запись с проверкой конфликта расписания." />
+  <title>Элективы · УрФУ Digital Campus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            malachite: { DEFAULT: '#0A5C36', 50: '#E8F5EE', 100: '#C5E6D4', 600: '#0A5C36', 700: '#084A2B', 800: '#063820' },
+            graphite: { DEFAULT: '#0F172A', soft: '#334155', mute: '#64748B' },
+            crystal: { DEFAULT: '#F8FAFC', dark: '#0B0F19', panel: '#151B2C' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          boxShadow: {
+            crystal: '0 0 0 1px rgba(10,92,54,0.12), 0 12px 40px -12px rgba(15,23,42,0.25)',
+            'crystal-dark': '0 0 0 1px rgba(10,92,54,0.35), 0 16px 48px -12px rgba(0,0,0,0.55)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { color-scheme: light; }
+    .dark { color-scheme: dark; }
+    html { font-feature-settings: 'tnum' 1, 'ss01' 1; }
+    body { font-family: Inter, system-ui, sans-serif; }
+    .logo-mark { color: #0F172A; }
+    .dark .logo-mark { color: #E2E8F0; }
+    .dark .logo-mark .logo-core,
+    .dark .logo-mark .logo-node,
+    .dark .logo-mark .logo-highlight { fill: #1FA86A; }
+    .dark .logo-mark .logo-edges { stroke: #1FA86A; }
+    .course-card { transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms ease; }
+    .course-card:hover { transform: translateY(-3px); }
+    .course-enter { animation: cardIn 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .course-card, .course-enter { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-crystal text-slate-900 dark:bg-crystal-dark dark:text-slate-100 antialiased pb-24 md:pb-0">
+
+  <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-crystal-panel/90">
+    <div class="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:h-16 sm:px-6">
+      <a href="../index.html" class="logo-mark flex shrink-0 items-center gap-2.5" aria-label="УрФУ Digital Campus — на главную">
+        <svg class="h-9 w-9" viewBox="0 0 64 64" aria-hidden="true" fill="none">
+          <path d="M32 2.5 L54.5 15.5 V40.5 L32 53.5 L9.5 40.5 V15.5 Z" stroke="currentColor" stroke-width="2.25" stroke-linejoin="miter"/>
+          <path d="M32 10 L46 18 V34 L32 42 L18 34 V18 Z" stroke="currentColor" stroke-width="1.25" opacity="0.55"/>
+          <path class="logo-core" d="M32 16 L40.5 21 V31 L32 36 L23.5 31 V21 Z" fill="#0A5C36"/>
+          <circle class="logo-node" cx="32" cy="26" r="2.6" fill="#0A5C36"/>
+          <g class="logo-edges" stroke="#0A5C36" stroke-width="1.15" opacity="0.9">
+            <line x1="32" y1="16" x2="32" y2="36"/>
+            <line x1="23.5" y1="21" x2="40.5" y2="31"/>
+            <line x1="40.5" y1="21" x2="23.5" y2="31"/>
+          </g>
+          <path class="logo-highlight" d="M32 10 L39 14 L32 16 L25 14 Z" fill="#0A5C36" opacity="0.28"/>
+        </svg>
+        <span class="hidden sm:flex flex-col leading-none">
+          <span class="text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">УрФУ</span>
+          <span class="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-malachite">Digital Campus</span>
+        </span>
+      </a>
+      <nav class="ml-4 hidden items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex" aria-label="Фаза студента">
+        <a href="dashboard.html" class="hover:text-malachite">Дашборд</a>
+        <a href="services.html" class="hover:text-malachite">Сервисы</a>
+        <a href="electives.html" class="text-malachite" aria-current="page">Элективы</a>
+        <a href="career.html" class="hover:text-malachite">Карьера</a>
+      </nav>
+      <div class="ml-auto flex items-center gap-2">
+        <span id="enrolledBadge" class="hidden rounded-lg border border-malachite/30 bg-malachite/10 px-2.5 py-1 text-xs font-semibold text-malachite sm:inline">Записано: 0</span>
+        <button type="button" id="themeToggle" class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-malachite/40 hover:text-malachite dark:border-slate-700 dark:text-slate-300" aria-label="Переключить тему">
+          <svg class="hidden h-5 w-5 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="block h-5 w-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <div class="mb-8">
+      <p class="text-xs font-semibold uppercase tracking-[0.16em] text-malachite">Студент · индивидуальная траектория</p>
+      <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">Маркетплейс элективов</h1>
+      <p class="mt-2 max-w-2xl text-sm text-slate-500 dark:text-slate-400 sm:text-base">Выбор курсов ИРИТ-РТФ, ИнЭУ и проектного обучения · проверка пересечений с расписанием РИ-230501 · лимит 6 ECTS элективов в семестре.</p>
+    </div>
+
+    <!-- FILTERS -->
+    <section class="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:p-5" aria-label="Фильтры">
+      <div class="flex flex-wrap items-end gap-4">
+        <div>
+          <p class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Направление</p>
+          <div class="flex flex-wrap gap-1.5" id="trackFilters" role="group"></div>
+        </div>
+        <div>
+          <p class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Кредиты ECTS</p>
+          <div class="flex flex-wrap gap-1.5" id="creditFilters" role="group"></div>
+        </div>
+        <div>
+          <p class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Сложность</p>
+          <div class="flex flex-wrap gap-1.5" id="levelFilters" role="group"></div>
+        </div>
+        <div class="ml-auto">
+          <label class="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-400" for="searchInput">Поиск</label>
+          <input id="searchInput" type="search" placeholder="курс или профессор" class="w-full min-w-[180px] rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900 sm:w-52" />
+        </div>
+      </div>
+      <p id="filterMeta" class="mt-3 text-xs text-slate-500 dark:text-slate-400"></p>
+    </section>
+
+    <!-- MY SCHEDULE CONFLICT HINT -->
+    <div class="mb-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
+      <span class="font-semibold text-slate-800 dark:text-slate-100">Ваше ядро (нельзя пересекать):</span>
+      Вт 10:15–13:30 ML · Ср 08:30–11:45 ОС · Пт 08:30–11:45 Веб
+    </div>
+
+    <div id="courseGrid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list"></div>
+    <p id="emptyState" class="mt-8 hidden text-center text-sm text-slate-500 dark:text-slate-400">Нет курсов по выбранным фильтрам — сбросьте направление или сложность.</p>
+  </main>
+
+  <!-- Conflict / confirm dialog -->
+  <div id="enrollModal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-900/50 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="enrollTitle">
+    <div class="w-full max-w-md rounded-t-xl border border-slate-200 bg-white p-5 shadow-crystal dark:border-slate-700 dark:bg-crystal-panel dark:shadow-crystal-dark sm:rounded-xl sm:p-6">
+      <h2 id="enrollTitle" class="text-lg font-bold text-slate-900 dark:text-white">Запись на электив</h2>
+      <p id="enrollBody" class="mt-2 text-sm text-slate-500 dark:text-slate-400"></p>
+      <div id="conflictBox" class="mt-4 hidden rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-200"></div>
+      <div class="mt-5 flex flex-wrap gap-2">
+        <button type="button" id="confirmEnrollBtn" class="rounded-lg bg-malachite px-4 py-2.5 text-sm font-semibold text-white hover:bg-malachite-700">Подтвердить запись</button>
+        <button type="button" id="cancelEnrollBtn" class="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:border-slate-600 dark:text-slate-200">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="pointer-events-none fixed bottom-24 left-1/2 z-[60] hidden -translate-x-1/2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg dark:bg-malachite md:bottom-8" role="status"></div>
+
+  <footer class="mt-8 border-t border-slate-200 bg-slate-900 text-slate-300 dark:border-slate-800">
+    <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <p class="text-sm text-slate-400">УрФУ · каталог элективов 2025/26 · прототип Digital Campus</p>
+      <nav class="flex flex-wrap gap-4 text-sm">
+        <a class="hover:text-white" href="../index.html">Главная</a>
+        <a class="hover:text-white" href="dashboard.html">Дашборд</a>
+        <a class="hover:text-white" href="services.html">Сервисы</a>
+      </nav>
+    </div>
+  </footer>
+
+  <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden dark:border-slate-800 dark:bg-crystal-panel/95" aria-label="Мобильная навигация">
+    <ul class="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 py-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+      <li><a href="../index.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10.5L12 4l8 6.5V20H4z"/></svg>Главная</a></li>
+      <li><a href="dashboard.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Дашборд</a></li>
+      <li><a href="services.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>Справки</a></li>
+      <li><a href="electives.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h14"/></svg>Элективы</a></li>
+    </ul>
+  </nav>
+
+  <script>
+    (() => {
+      'use strict';
+
+      /* Core schedule slots occupied by РИ-230501 (day + start-end minutes) */
+      const CORE_SLOTS = [
+        { day: 'tue', start: 10 * 60 + 15, end: 13 * 60 + 30, label: 'Вт 10:15–13:30 Машинное обучение' },
+        { day: 'wed', start: 8 * 60 + 30, end: 11 * 60 + 45, label: 'Ср 08:30–11:45 Операционные системы' },
+        { day: 'fri', start: 8 * 60 + 30, end: 11 * 60 + 45, label: 'Пт 08:30–11:45 Веб-технологии' },
+      ];
+
+      const COURSES = [
+        {
+          id: 'dl-ai',
+          title: 'Глубокое обучение в AI',
+          track: 'AI',
+          credits: 4,
+          level: 'advanced',
+          seats: 12,
+          capacity: 30,
+          rating: 4.8,
+          professor: 'д.т.н. проф. Петров А.Н.',
+          institute: 'ИРИТ-РТФ',
+          slot: { day: 'thu', start: 16 * 60, end: 17 * 60 + 30, label: 'Чт 16:00–17:30' },
+          desc: 'CNN, Transformer, PyTorch · проект на данных УЦСЭМ',
+        },
+        {
+          id: 'go-backend',
+          title: 'Разработка на Go',
+          track: 'Backend',
+          credits: 3,
+          level: 'intermediate',
+          seats: 8,
+          capacity: 25,
+          rating: 4.6,
+          professor: 'ст. преп. Морозова Е.В.',
+          institute: 'ИРИТ-РТФ',
+          slot: { day: 'mon', start: 16 * 60, end: 17 * 60 + 30, label: 'Пн 16:00–17:30' },
+          desc: 'concurrency, gRPC, микросервисы · кейс Яндекс.Облако',
+        },
+        {
+          id: 'product',
+          title: 'Управление продуктом',
+          track: 'Product',
+          credits: 3,
+          level: 'beginner',
+          seats: 15,
+          capacity: 40,
+          rating: 4.7,
+          professor: 'к.э.н. Андреева Л.В.',
+          institute: 'ИнЭУ',
+          slot: { day: 'wed', start: 14 * 60 + 15, end: 15 * 60 + 45, label: 'Ср 14:15–15:45' },
+          desc: 'JTBD, метрики North Star, discovery · партнёр СКБ Контур',
+        },
+        {
+          id: 'cyber',
+          title: 'Практическая кибербезопасность',
+          track: 'Security',
+          credits: 4,
+          level: 'advanced',
+          seats: 5,
+          capacity: 20,
+          rating: 4.9,
+          professor: 'к.т.н. Белов С.Ю.',
+          institute: 'ИРИТ-РТФ',
+          slot: { day: 'tue', start: 14 * 60 + 15, end: 15 * 60 + 45, label: 'Вт 14:15–15:45' },
+          desc: 'pentest lab, SIEM, hardening корпоративных сетей',
+        },
+        {
+          id: 'ux-research',
+          title: 'UX-исследования цифровых продуктов',
+          track: 'Product',
+          credits: 2,
+          level: 'beginner',
+          seats: 18,
+          capacity: 35,
+          rating: 4.5,
+          professor: 'доц. Орлова Н.А.',
+          institute: 'ИРИТ-РТФ',
+          slot: { day: 'fri', start: 14 * 60 + 15, end: 15 * 60 + 45, label: 'Пт 14:15–15:45' },
+          desc: 'интервью, usability-тесты, CJM для кампусных сервисов',
+        },
+        {
+          id: 'rust-sys',
+          title: 'Системное программирование на Rust',
+          track: 'Backend',
+          credits: 4,
+          level: 'advanced',
+          seats: 6,
+          capacity: 18,
+          rating: 4.4,
+          professor: 'доц. Васильев Р.К.',
+          institute: 'ИРИТ-РТФ',
+          slot: { day: 'wed', start: 10 * 60 + 15, end: 11 * 60 + 45, label: 'Ср 10:15–11:45' },
+          desc: 'ownership, unsafe, FFI · конфликт с парой ОС',
+        },
+        {
+          id: 'data-eng',
+          title: 'Инженерия данных',
+          track: 'AI',
+          credits: 3,
+          level: 'intermediate',
+          seats: 10,
+          capacity: 28,
+          rating: 4.6,
+          professor: 'асс. Лебедева М.С.',
+          institute: 'ИРИТ-РТФ',
+          slot: { day: 'mon', start: 14 * 60 + 15, end: 15 * 60 + 45, label: 'Пн 14:15–15:45' },
+          desc: 'ETL, Airflow, ClickHouse · витрины для Digital Campus',
+        },
+        {
+          id: 'iot-ural',
+          title: 'Промышленный IoT Урала',
+          track: 'Hardware',
+          credits: 3,
+          level: 'intermediate',
+          seats: 9,
+          capacity: 22,
+          rating: 4.3,
+          professor: 'доц. Кузнецов И.П.',
+          institute: 'ИНМТ',
+          slot: { day: 'thu', start: 12 * 60, end: 13 * 60 + 30, label: 'Чт 12:00–13:30' },
+          desc: 'датчики, MQTT, edge · кейсы Уралмаш и ТМК',
+        },
+        {
+          id: 'ml-conflict',
+          title: 'Компьютерное зрение в производстве',
+          track: 'AI',
+          credits: 4,
+          level: 'advanced',
+          seats: 7,
+          capacity: 20,
+          rating: 4.7,
+          professor: 'проф. Петров А.Н.',
+          institute: 'ИРИТ-РТФ',
+          slot: { day: 'tue', start: 12 * 60, end: 13 * 60 + 30, label: 'Вт 12:00–13:30' },
+          desc: 'OpenCV, YOLO · пересекается с лабораторной ML',
+        },
+      ];
+
+      const TRACKS = ['all', 'AI', 'Backend', 'Product', 'Security', 'Hardware'];
+      const CREDITS = ['all', '2', '3', '4'];
+      const LEVELS = ['all', 'beginner', 'intermediate', 'advanced'];
+      const LEVEL_LABEL = { beginner: 'Базовый', intermediate: 'Средний', advanced: 'Продвинутый', all: 'Все' };
+      const TRACK_LABEL = { all: 'Все', AI: 'AI', Backend: 'Backend', Product: 'Product', Security: 'Security', Hardware: 'Hardware' };
+
+      let filterTrack = 'all';
+      let filterCredit = 'all';
+      let filterLevel = 'all';
+      let search = '';
+      let enrolled = new Set(JSON.parse(localStorage.getItem('urfu-electives') || '[]'));
+      let pendingId = null;
+
+      const html = document.documentElement;
+      const storedTheme = localStorage.getItem('urfu-theme');
+      if (storedTheme === 'dark' || (!storedTheme && matchMedia('(prefers-color-scheme: dark)').matches)) {
+        html.classList.add('dark');
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        localStorage.setItem('urfu-theme', html.classList.toggle('dark') ? 'dark' : 'light');
+      });
+
+      const toast = document.getElementById('toast');
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.remove('hidden');
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => toast.classList.add('hidden'), 2800);
+      }
+
+      function overlaps(a, b) {
+        return a.day === b.day && a.start < b.end && b.start < a.end;
+      }
+
+      function findConflicts(course) {
+        const core = CORE_SLOTS.filter((s) => overlaps(s, course.slot)).map((s) => s.label);
+        const other = COURSES
+          .filter((c) => enrolled.has(c.id) && c.id !== course.id && overlaps(c.slot, course.slot))
+          .map((c) => c.slot.label + ' · ' + c.title);
+        return [...core, ...other];
+      }
+
+      function makeFilterButtons(containerId, items, labels, current, onPick) {
+        const el = document.getElementById(containerId);
+        el.innerHTML = items.map((v) => {
+          const on = v === current;
+          const label = typeof labels === 'function' ? labels(v) : (labels[v] || v);
+          return `<button type="button" data-v="${v}" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${on
+            ? 'bg-malachite text-white'
+            : 'border border-slate-200 text-slate-600 hover:border-malachite/40 dark:border-slate-600 dark:text-slate-300'}">${label}</button>`;
+        }).join('');
+        el.querySelectorAll('button').forEach((btn) => {
+          btn.addEventListener('click', () => onPick(btn.dataset.v));
+        });
+      }
+
+      function renderFilters() {
+        makeFilterButtons('trackFilters', TRACKS, TRACK_LABEL, filterTrack, (v) => { filterTrack = v; renderFilters(); render(); });
+        makeFilterButtons('creditFilters', CREDITS, (v) => (v === 'all' ? 'Все' : v), filterCredit, (v) => { filterCredit = v; renderFilters(); render(); });
+        makeFilterButtons('levelFilters', LEVELS, LEVEL_LABEL, filterLevel, (v) => { filterLevel = v; renderFilters(); render(); });
+      }
+
+      function updateBadge() {
+        const badge = document.getElementById('enrolledBadge');
+        const n = enrolled.size;
+        badge.textContent = 'Записано: ' + n;
+        badge.classList.toggle('hidden', n === 0);
+        badge.classList.toggle('sm:inline', n > 0);
+      }
+
+      function stars(r) {
+        const full = Math.round(r);
+        return '★'.repeat(full) + '☆'.repeat(5 - full);
+      }
+
+      function render() {
+        const grid = document.getElementById('courseGrid');
+        const empty = document.getElementById('emptyState');
+        const q = search.trim().toLowerCase();
+
+        const items = COURSES.filter((c) => {
+          if (filterTrack !== 'all' && c.track !== filterTrack) return false;
+          if (filterCredit !== 'all' && String(c.credits) !== filterCredit) return false;
+          if (filterLevel !== 'all' && c.level !== filterLevel) return false;
+          if (q && !(c.title.toLowerCase().includes(q) || c.professor.toLowerCase().includes(q))) return false;
+          return true;
+        });
+
+        document.getElementById('filterMeta').textContent =
+          `${items.length} курсов · ваш лимит: ${[...enrolled].reduce((s, id) => s + (COURSES.find((c) => c.id === id)?.credits || 0), 0)} / 6 ECTS`;
+
+        empty.classList.toggle('hidden', items.length > 0);
+        grid.innerHTML = items.map((c, i) => {
+          const isIn = enrolled.has(c.id);
+          const seatsLeft = c.seats;
+          const full = seatsLeft <= 0 && !isIn;
+          const conflictHint = findConflicts(c).length > 0 && !isIn;
+          return `
+          <article class="course-card course-enter flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-crystal-panel" style="animation-delay:${i * 25}ms" role="listitem" data-id="${c.id}">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-malachite">${c.track}</span>
+              <span class="text-[11px] text-slate-400">${c.institute}</span>
+              ${conflictHint ? '<span class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">конфликт</span>' : ''}
+            </div>
+            <h3 class="mt-2 text-base font-bold text-slate-900 dark:text-white">${c.title}</h3>
+            <p class="mt-1 flex-1 text-sm text-slate-500 dark:text-slate-400">${c.desc}</p>
+            <div class="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+              <span class="font-semibold tabular-nums text-slate-700 dark:text-slate-200">${c.credits} ECTS</span>
+              <span>${LEVEL_LABEL[c.level]}</span>
+              <span>${c.slot.label}</span>
+            </div>
+            <div class="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+              <div class="min-w-0">
+                <p class="truncate text-xs font-medium text-slate-700 dark:text-slate-200">${c.professor}</p>
+                <p class="text-[11px] tabular-nums text-amber-600 dark:text-amber-400" title="${c.rating}">${stars(c.rating)} ${c.rating}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs font-bold tabular-nums ${seatsLeft <= 5 ? 'text-malachite' : 'text-slate-600 dark:text-slate-300'}" data-seats="${c.id}">${isIn ? 'Вы записаны' : seatsLeft + ' мест'}</p>
+                <p class="text-[10px] text-slate-400">из ${c.capacity}</p>
+              </div>
+            </div>
+            <button type="button" data-enroll="${c.id}"
+              class="mt-4 w-full rounded-lg px-3 py-2.5 text-sm font-semibold transition ${isIn
+                ? 'border border-malachite bg-malachite/10 text-malachite'
+                : full
+                  ? 'cursor-not-allowed border border-slate-200 text-slate-400 dark:border-slate-700'
+                  : 'bg-malachite text-white hover:bg-malachite-700'}"
+              ${full ? 'disabled' : ''}>
+              ${isIn ? 'Отменить запись' : full ? 'Мест нет' : 'Записаться'}
+            </button>
+          </article>`;
+        }).join('');
+
+        grid.querySelectorAll('[data-enroll]').forEach((btn) => {
+          btn.addEventListener('click', () => openEnroll(btn.dataset.enroll));
+        });
+        updateBadge();
+      }
+
+      const enrollModal = document.getElementById('enrollModal');
+      const conflictBox = document.getElementById('conflictBox');
+      const confirmBtn = document.getElementById('confirmEnrollBtn');
+
+      function openEnroll(id) {
+        const course = COURSES.find((c) => c.id === id);
+        if (!course) return;
+
+        if (enrolled.has(id)) {
+          enrolled.delete(id);
+          course.seats += 1;
+          localStorage.setItem('urfu-electives', JSON.stringify([...enrolled]));
+          showToast('Запись отменена: ' + course.title);
+          render();
+          return;
+        }
+
+        if (course.seats <= 0) {
+          showToast('Свободных мест не осталось');
+          return;
+        }
+
+        const used = [...enrolled].reduce((s, eid) => s + (COURSES.find((c) => c.id === eid)?.credits || 0), 0);
+        if (used + course.credits > 6) {
+          showToast('Превышен лимит 6 ECTS элективов');
+          return;
+        }
+
+        pendingId = id;
+        const conflicts = findConflicts(course);
+        document.getElementById('enrollBody').textContent =
+          `${course.title} · ${course.credits} ECTS · ${course.slot.label} · ${course.professor}`;
+
+        if (conflicts.length) {
+          conflictBox.classList.remove('hidden');
+          conflictBox.innerHTML = '<p class="font-semibold">Обнаружен конфликт расписания:</p><ul class="mt-1 list-disc pl-4">' +
+            conflicts.map((x) => '<li>' + x + '</li>').join('') +
+            '</ul><p class="mt-2 text-xs">Запись всё равно возможна — жюри может увидеть блокировку или подтверждение.</p>';
+          confirmBtn.textContent = 'Записаться несмотря на конфликт';
+          confirmBtn.classList.remove('bg-malachite', 'hover:bg-malachite-700');
+          confirmBtn.classList.add('bg-slate-800', 'hover:bg-slate-900', 'dark:bg-slate-700');
+        } else {
+          conflictBox.classList.add('hidden');
+          confirmBtn.textContent = 'Подтвердить запись';
+          confirmBtn.classList.add('bg-malachite', 'hover:bg-malachite-700');
+          confirmBtn.classList.remove('bg-slate-800', 'hover:bg-slate-900', 'dark:bg-slate-700');
+        }
+
+        enrollModal.classList.remove('hidden');
+        enrollModal.classList.add('flex');
+      }
+
+      function closeEnroll() {
+        enrollModal.classList.add('hidden');
+        enrollModal.classList.remove('flex');
+        pendingId = null;
+      }
+
+      confirmBtn.addEventListener('click', () => {
+        if (!pendingId) return;
+        const course = COURSES.find((c) => c.id === pendingId);
+        if (!course || course.seats <= 0) {
+          closeEnroll();
+          return;
+        }
+        enrolled.add(course.id);
+        course.seats -= 1;
+        localStorage.setItem('urfu-electives', JSON.stringify([...enrolled]));
+        showToast('Записаны: ' + course.title + ' · осталось ' + course.seats + ' мест');
+        closeEnroll();
+        render();
+      });
+
+      document.getElementById('cancelEnrollBtn').addEventListener('click', closeEnroll);
+      enrollModal.addEventListener('click', (e) => { if (e.target === enrollModal) closeEnroll(); });
+
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        search = e.target.value;
+        render();
+      });
+
+      enrolled.forEach((id) => {
+        const c = COURSES.find((x) => x.id === id);
+        if (c && c.seats > 0) c.seats -= 1;
+      });
+
+      renderFilters();
+      render();
+    })();
+  </script>
+</body>
+</html>

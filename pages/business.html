@@ -1,0 +1,441 @@
+<!-- UX_JUSTIFICATION: Закрывает JTBD Группы 3 (бизнес) из UX_RESEARCH §8: Time-to-Relevant-Lab ≤3 мин через B2B-каталог с тегами отраслей; бриф + SLA-таймер → Qualified R&D Lead; убирает барьер «канцелярский PDF сотрудничества» — match лаборатории → заявка без посредников. -->
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="B2B-портал УрФУ: каталог R&D-лабораторий, патенты, оборудование, бриф на исследование со SLA 48 часов." />
+  <title>Портал для бизнеса · R&amp;D УрФУ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            malachite: { DEFAULT: '#0A5C36', 50: '#E8F5EE', 100: '#C5E6D4', 600: '#0A5C36', 700: '#084A2B', 800: '#063820' },
+            graphite: { DEFAULT: '#0F172A', soft: '#334155', mute: '#64748B' },
+            crystal: { DEFAULT: '#F8FAFC', dark: '#0B0F19', panel: '#151B2C' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          boxShadow: {
+            crystal: '0 0 0 1px rgba(10,92,54,0.12), 0 12px 40px -12px rgba(15,23,42,0.25)',
+            'crystal-dark': '0 0 0 1px rgba(10,92,54,0.35), 0 16px 48px -12px rgba(0,0,0,0.55)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { color-scheme: light; }
+    .dark { color-scheme: dark; }
+    html { font-feature-settings: 'tnum' 1, 'ss01' 1; }
+    body { font-family: Inter, system-ui, sans-serif; }
+    .logo-mark { color: #0F172A; }
+    .dark .logo-mark { color: #E2E8F0; }
+    .dark .logo-mark .logo-core,
+    .dark .logo-mark .logo-node,
+    .dark .logo-mark .logo-highlight { fill: #1FA86A; }
+    .dark .logo-mark .logo-edges { stroke: #1FA86A; }
+    .lab-card { transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms ease; }
+    .lab-card:hover { transform: translateY(-2px); }
+    .sla-ring { stroke-dasharray: 100; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+    .modal-backdrop { animation: fadeIn 200ms ease; }
+    .modal-panel { animation: slideUp 280ms cubic-bezier(0.22, 1, 0.36, 1); }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) {
+      .lab-card, .modal-backdrop, .modal-panel, .sla-ring { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-crystal text-slate-900 dark:bg-crystal-dark dark:text-slate-100 antialiased pb-24 md:pb-0">
+
+  <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-crystal-panel/90">
+    <div class="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:h-16 sm:px-6">
+      <a href="../index.html" class="logo-mark flex shrink-0 items-center gap-2.5" aria-label="УрФУ Digital Campus — на главную">
+        <svg class="h-9 w-9" viewBox="0 0 64 64" aria-hidden="true" fill="none">
+          <path d="M32 2.5 L54.5 15.5 V40.5 L32 53.5 L9.5 40.5 V15.5 Z" stroke="currentColor" stroke-width="2.25" stroke-linejoin="miter"/>
+          <path d="M32 10 L46 18 V34 L32 42 L18 34 V18 Z" stroke="currentColor" stroke-width="1.25" opacity="0.55"/>
+          <path class="logo-core" d="M32 16 L40.5 21 V31 L32 36 L23.5 31 V21 Z" fill="#0A5C36"/>
+          <circle class="logo-node" cx="32" cy="26" r="2.6" fill="#0A5C36"/>
+          <g class="logo-edges" stroke="#0A5C36" stroke-width="1.15" opacity="0.9">
+            <line x1="32" y1="16" x2="32" y2="36"/>
+            <line x1="23.5" y1="21" x2="40.5" y2="31"/>
+            <line x1="40.5" y1="21" x2="23.5" y2="31"/>
+          </g>
+          <path class="logo-highlight" d="M32 10 L39 14 L32 16 L25 14 Z" fill="#0A5C36" opacity="0.28"/>
+        </svg>
+        <span class="hidden sm:flex flex-col leading-none">
+          <span class="text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">УрФУ</span>
+          <span class="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-malachite">Digital Campus</span>
+        </span>
+      </a>
+      <nav class="ml-4 hidden items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-300 lg:flex" aria-label="Фаза партнёра">
+        <a href="business.html" class="text-malachite" aria-current="page">R&amp;D</a>
+        <a href="startups.html" class="hover:text-malachite">Стартапы</a>
+        <a href="career.html" class="hover:text-malachite">Таланты</a>
+      </nav>
+      <div class="ml-auto flex items-center gap-2">
+        <button type="button" id="openBriefBtn" class="hidden rounded-lg bg-malachite px-3 py-2 text-xs font-semibold text-white hover:bg-malachite-700 sm:inline-flex">Отправить бриф</button>
+        <button type="button" id="themeToggle" class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-malachite/40 hover:text-malachite dark:border-slate-700 dark:text-slate-300" aria-label="Переключить тему">
+          <svg class="hidden h-5 w-5 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="block h-5 w-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-malachite">Партнёр · НИОКР 4,1 млрд ₽</p>
+        <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">Научный потенциал как B2B-каталог</h1>
+        <p class="mt-2 max-w-2xl text-sm text-slate-500 dark:text-slate-400 sm:text-base">Лаборатории, оборудование, патенты и SLA ответа 48 часов — без канцелярского PDF «о сотрудничестве».</p>
+      </div>
+      <div class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-crystal-panel">
+        <div class="relative h-12 w-12">
+          <svg class="h-12 w-12 -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
+            <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" class="text-slate-200 dark:text-slate-700" stroke-width="3"/>
+            <circle id="slaRing" class="sla-ring text-malachite" cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" stroke-width="3" stroke-dashoffset="0"/>
+          </svg>
+          <span id="slaHours" class="absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums text-malachite">48ч</span>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-900 dark:text-white">SLA ответа на бриф</p>
+          <p id="slaLabel" class="text-[11px] text-slate-500">Гарантия account-контакта · Приоритет-2030</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-6 flex flex-wrap gap-2" id="industryFilters" role="group" aria-label="Фильтр по индустриям">
+      <button type="button" data-industry="all" class="filter-btn rounded-lg border border-malachite bg-malachite/10 px-3 py-1.5 text-xs font-semibold text-malachite">Все</button>
+      <button type="button" data-industry="Металлургия" class="filter-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">Металлургия</button>
+      <button type="button" data-industry="AI" class="filter-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">AI</button>
+      <button type="button" data-industry="Энергетика" class="filter-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">Энергетика</button>
+      <button type="button" data-industry="IoT" class="filter-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">Industrial IoT</button>
+      <button type="button" data-industry="Материалы" class="filter-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">Материалы</button>
+    </div>
+
+    <p id="labCount" class="mb-4 text-xs font-medium text-slate-500"></p>
+    <div id="labGrid" class="grid gap-4 sm:grid-cols-2"></div>
+
+    <section id="brief" class="mt-12 scroll-mt-24 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:p-8">
+      <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-malachite">Заявка · R&amp;D Lead</p>
+          <h2 class="mt-1 text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">Бриф на исследование</h2>
+          <p class="mt-2 max-w-xl text-sm text-slate-500 dark:text-slate-400">Структурированная заявка → квалификация owner’ом партнёрства → встреча. SLA зависит от срочности.</p>
+        </div>
+        <div class="rounded-lg bg-malachite/10 px-3 py-2 text-center">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-malachite">Таймер SLA</p>
+          <p id="briefSlaDisplay" class="text-lg font-extrabold tabular-nums text-malachite">48:00:00</p>
+        </div>
+      </div>
+      <form id="briefForm" class="grid gap-4 sm:grid-cols-2">
+        <label class="block sm:col-span-1">
+          <span class="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Компания</span>
+          <input name="company" required placeholder="ПАО «НЛМК» / СКБ Контур / УГМК" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900" />
+        </label>
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Контакт (ФИО, email)</span>
+          <input name="contact" required placeholder="Иванов П.А. · p.ivanov@company.ru" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900" />
+        </label>
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Отрасль</span>
+          <select name="industry" id="briefIndustry" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900">
+            <option>Металлургия</option>
+            <option>AI</option>
+            <option>Энергетика</option>
+            <option>IoT</option>
+            <option>Материалы</option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Целевая лаборатория</span>
+          <select name="lab" id="briefLab" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900"></select>
+        </label>
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Срочность / кастомный SLA</span>
+          <select name="sla" id="slaSelect" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900">
+            <option value="48">Стандарт · 48 часов</option>
+            <option value="24">Ускоренный · 24 часа</option>
+            <option value="8">Пилот / инцидент · 8 часов</option>
+            <option value="72">Разведка · 72 часа</option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Тип задачи</span>
+          <select name="task" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900">
+            <option>Пилотное исследование</option>
+            <option>НИОКР под контракт</option>
+            <option>Испытания на оборудовании</option>
+            <option>Патентный ландшафт / IP</option>
+            <option>Целевое обучение кадров</option>
+          </select>
+        </label>
+        <label class="block sm:col-span-2">
+          <span class="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Описание задачи / ТЗ</span>
+          <textarea name="tz" required rows="4" placeholder="Нужен пилот по детекции дефектов проката на линии горячей прокатки: датасет, метрики precision/recall, срок 90 дней…" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900"></textarea>
+        </label>
+        <div class="sm:col-span-2 flex flex-wrap items-center gap-3">
+          <button type="submit" class="rounded-lg bg-malachite px-5 py-2.5 text-sm font-semibold text-white hover:bg-malachite-700">Отправить бриф · зафиксировать SLA</button>
+          <p id="briefStatus" class="text-sm text-slate-500"></p>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-200 bg-slate-900 text-slate-300 dark:border-slate-800">
+    <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:justify-between sm:px-6">
+      <div>
+        <p class="text-lg font-bold text-white">Уральский федеральный университет</p>
+        <p class="mt-1 text-sm text-slate-400">Центр трансфера технологий · ул. Мира, 19</p>
+      </div>
+      <nav class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <a class="hover:text-white" href="business.html">R&amp;D</a>
+        <a class="hover:text-white" href="startups.html">Стартапы</a>
+        <a class="hover:text-white" href="career.html">Карьера</a>
+        <a class="hover:text-white" href="media.html">Медиа</a>
+        <a class="hover:text-white" href="../index.html">Главная</a>
+      </nav>
+    </div>
+  </footer>
+
+  <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden dark:border-slate-800 dark:bg-crystal-panel/95" aria-label="Мобильная навигация">
+    <ul class="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 py-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+      <li><a href="../index.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10.5L12 4l8 6.5V20H4z"/></svg>Главная</a></li>
+      <li><a href="business.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10l8-5 8 5v10M9 20v-6h6v6"/></svg>R&amp;D</a></li>
+      <li><a href="startups.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M7 8l5-5 5 5M7 16h10"/></svg>Стартапы</a></li>
+      <li><button type="button" id="mobileBriefBtn" class="flex w-full flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5h14v14H5zM8 9h8M8 13h6"/></svg>Бриф</button></li>
+    </ul>
+  </nav>
+
+  <div id="toast" class="pointer-events-none fixed bottom-24 left-1/2 z-50 hidden -translate-x-1/2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg dark:bg-malachite md:bottom-8" role="status"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const LABS = [
+        {
+          id: 'hydrogen',
+          name: 'Лаборатория водородной энергетики',
+          institute: 'УралЭНИН',
+          industries: ['Энергетика', 'Материалы'],
+          equipment: ['PEM-электролизёр 5 кВт', 'Газовый хроматограф Agilent', 'Климатическая камера −40…+85 °C'],
+          patents: 7,
+          sla: 48,
+          lead: 'д.т.н. Соколов В.И.',
+          case: 'Пилот с УГМК: КПД стека +4,2 п.п. за 6 месяцев',
+        },
+        {
+          id: 'ml-irit',
+          name: 'Центр машинного обучения ИРИТ-РТФ',
+          institute: 'ИРИТ-РТФ',
+          industries: ['AI', 'Металлургия', 'IoT'],
+          equipment: ['GPU-кластер 8×A100', 'MLOps GitLab + Kubeflow', 'Дата-лейбл студия'],
+          patents: 4,
+          sla: 24,
+          lead: 'к.т.н. Кузнецов А.Д.',
+          case: 'Дефектоскопия проката НЛМК: F1 = 0,94 на цеховых данных',
+        },
+        {
+          id: 'materials',
+          name: 'НИЛ новых материалов ИНМТ',
+          institute: 'ИНМТ',
+          industries: ['Материалы', 'Металлургия'],
+          equipment: ['СЭМ ZEISS', 'Дифрактометр Bruker', 'Вакуумная плавка 50 кг'],
+          patents: 12,
+          sla: 48,
+          lead: 'чл.-корр. РАН Петров Н.С.',
+          case: 'Сплав для лопаток ГТУ: ресурс +18% vs серия',
+        },
+        {
+          id: 'iot-ural',
+          name: 'Лаборатория промышленного IoT',
+          institute: 'ИРИТ-РТФ',
+          industries: ['IoT', 'Металлургия', 'Энергетика'],
+          equipment: ['Edge-шлюзы Siemens', 'Тестовый стенд OPC UA', '5G-стенд МТС'],
+          patents: 3,
+          sla: 48,
+          lead: 'доц. Малышев К.Р.',
+          case: 'Предиктив ТОиР на Синара: downtime −11%',
+        },
+        {
+          id: 'energy-storage',
+          name: 'Центр накопителей энергии',
+          institute: 'УралЭНИН',
+          industries: ['Энергетика', 'Материалы'],
+          equipment: ['Циклёр батарей 200 каналов', 'Калориметр ARC', 'Стенд BMS'],
+          patents: 5,
+          sla: 72,
+          lead: 'к.т.н. Фомина Е.А.',
+          case: 'Li-S прототип 320 Wh/kg для беспилотников УЗГА',
+        },
+        {
+          id: 'cv-vision',
+          name: 'Лаборатория компьютерного зрения',
+          institute: 'ИРИТ-РТФ',
+          industries: ['AI', 'IoT'],
+          equipment: ['Линия камер Basler', 'Стенд освещения', 'Annotation pipeline'],
+          patents: 2,
+          sla: 24,
+          lead: 'ст.н.с. Орлов Д.М.',
+          case: 'OCR маркировки труб ТМК: 99,1% accuracy',
+        },
+      ];
+
+      let industry = 'all';
+      let slaHours = 48;
+      let slaDeadline = null;
+      let slaTimer = null;
+
+      const html = document.documentElement;
+      const storedTheme = localStorage.getItem('urfu-theme');
+      if (storedTheme === 'dark' || (!storedTheme && matchMedia('(prefers-color-scheme: dark)').matches)) {
+        html.classList.add('dark');
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        localStorage.setItem('urfu-theme', html.classList.toggle('dark') ? 'dark' : 'light');
+      });
+
+      function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.remove('hidden');
+        clearTimeout(showToast._id);
+        showToast._id = setTimeout(() => t.classList.add('hidden'), 3200);
+      }
+
+      function formatHMS(totalSec) {
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        return [h, m, s].map((n) => String(n).padStart(2, '0')).join(':');
+      }
+
+      function updateSlaUI() {
+        document.getElementById('slaHours').textContent = slaHours + 'ч';
+        document.getElementById('briefSlaDisplay').textContent = formatHMS(slaHours * 3600);
+        const ring = document.getElementById('slaRing');
+        const pct = Math.min(100, (slaHours / 72) * 100);
+        ring.style.strokeDashoffset = String(100 - pct);
+        document.getElementById('slaLabel').textContent =
+          slaHours <= 8 ? 'Инцидентный режим · account on-call' :
+          slaHours <= 24 ? 'Ускоренный контур Приоритет-2030' :
+          'Гарантия account-контакта · Приоритет-2030';
+      }
+
+      function startSlaCountdown(hours) {
+        slaHours = hours;
+        slaDeadline = Date.now() + hours * 3600 * 1000;
+        updateSlaUI();
+        clearInterval(slaTimer);
+        slaTimer = setInterval(() => {
+          const left = Math.max(0, Math.floor((slaDeadline - Date.now()) / 1000));
+          document.getElementById('briefSlaDisplay').textContent = formatHMS(left);
+          const pct = (left / (hours * 3600)) * 100;
+          document.getElementById('slaRing').style.strokeDashoffset = String(100 - pct);
+          document.getElementById('slaHours').textContent = Math.ceil(left / 3600) + 'ч';
+          if (left <= 0) clearInterval(slaTimer);
+        }, 1000);
+      }
+
+      function renderLabs() {
+        const list = LABS.filter((l) => industry === 'all' || l.industries.includes(industry));
+        document.getElementById('labCount').textContent = `Найдено лабораторий: ${list.length}`;
+        document.getElementById('labGrid').innerHTML = list.map((lab) => `
+          <article class="lab-card rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:p-6" data-id="${lab.id}">
+            <div class="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-malachite">${lab.institute}</p>
+                <h3 class="mt-1 text-base font-bold text-slate-900 dark:text-white">${lab.name}</h3>
+                <p class="mt-1 text-xs text-slate-500">Руководитель: ${lab.lead}</p>
+              </div>
+              <span class="rounded-lg bg-malachite/10 px-2.5 py-1 text-[11px] font-bold tabular-nums text-malachite">SLA ${lab.sla}ч</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              ${lab.industries.map((t) => `<span class="rounded-md border border-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:border-slate-600 dark:text-slate-300">${t}</span>`).join('')}
+            </div>
+            <div class="mt-4">
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Стек оборудования</p>
+              <ul class="mt-1.5 space-y-1 text-sm text-slate-600 dark:text-slate-300">
+                ${lab.equipment.map((e) => `<li class="flex gap-2"><span class="text-malachite">▸</span>${e}</li>`).join('')}
+              </ul>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+              <p class="text-xs text-slate-500"><span class="font-bold tabular-nums text-slate-800 dark:text-slate-200">${lab.patents}</span> патентов · ${lab.case}</p>
+              <button type="button" data-brief="${lab.id}" class="brief-lab rounded-lg bg-malachite px-3 py-2 text-xs font-semibold text-white hover:bg-malachite-700">Заказать исследование</button>
+            </div>
+          </article>
+        `).join('');
+
+        document.querySelectorAll('.brief-lab').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            document.getElementById('briefLab').value = btn.dataset.brief;
+            const lab = LABS.find((l) => l.id === btn.dataset.brief);
+            if (lab) {
+              document.getElementById('slaSelect').value = String(lab.sla);
+              startSlaCountdown(lab.sla);
+            }
+            document.getElementById('brief').scrollIntoView({ behavior: 'smooth' });
+          });
+        });
+
+        const sel = document.getElementById('briefLab');
+        const prev = sel.value;
+        sel.innerHTML = LABS.map((l) => `<option value="${l.id}">${l.name}</option>`).join('');
+        if (prev) sel.value = prev;
+      }
+
+      document.querySelectorAll('.filter-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          industry = btn.dataset.industry;
+          document.querySelectorAll('.filter-btn').forEach((b) => {
+            const on = b.dataset.industry === industry;
+            b.classList.toggle('border-malachite', on);
+            b.classList.toggle('bg-malachite/10', on);
+            b.classList.toggle('text-malachite', on);
+            b.classList.toggle('border-slate-200', !on);
+            b.classList.toggle('dark:border-slate-600', !on);
+            b.classList.toggle('text-slate-600', !on);
+          });
+          renderLabs();
+        });
+      });
+
+      document.getElementById('slaSelect').addEventListener('change', (e) => {
+        startSlaCountdown(Number(e.target.value));
+      });
+
+      document.getElementById('briefForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const id = 'URFU-RD-2026-' + String(1200 + Math.floor(Math.random() * 800));
+        const hours = Number(fd.get('sla'));
+        startSlaCountdown(hours);
+        document.getElementById('briefStatus').textContent =
+          `Принято · ${id} · ответ до ${new Date(Date.now() + hours * 3600 * 1000).toLocaleString('ru-RU')}`;
+        showToast('Бриф квалифицирован · SLA ' + hours + 'ч запущено');
+        e.target.reset();
+        document.getElementById('slaSelect').value = String(hours);
+      });
+
+      function scrollBrief() {
+        document.getElementById('brief').scrollIntoView({ behavior: 'smooth' });
+      }
+      document.getElementById('openBriefBtn').addEventListener('click', scrollBrief);
+      document.getElementById('mobileBriefBtn').addEventListener('click', scrollBrief);
+
+      renderLabs();
+      updateSlaUI();
+
+      if (location.hash === '#brief') setTimeout(scrollBrief, 200);
+    })();
+  </script>
+</body>
+</html>

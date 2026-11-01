@@ -1,0 +1,601 @@
+<!-- UX_JUSTIFICATION: Главная как ролевой коммутатор закрывает боли 1–2 и 5 из UX_RESEARCH: канцелярит → Outcome-first VP; «кладбище ссылок» → 3 точки входа (Абитуриент/Студент/Партнёр) + task shortcuts; скрытые CTA → явные primary actions. AI-поиск закрывает Боль 3 (слепой поиск). Mobile-first + bottom-nav — Боль 4. Медиа-журнал — верхняя воронка доверия (стр. 10 IA). -->
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Digital Campus УрФУ — подберите программу, управляйте учёбой, найдите лабораторию. Екатеринбург." />
+  <title>УрФУ · Digital Campus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            malachite: {
+              DEFAULT: '#0A5C36',
+              50: '#E8F5EE',
+              100: '#C5E6D4',
+              600: '#0A5C36',
+              700: '#084A2B',
+              800: '#063820',
+            },
+            graphite: {
+              DEFAULT: '#0F172A',
+              soft: '#334155',
+              mute: '#64748B',
+            },
+            crystal: {
+              DEFAULT: '#F8FAFC',
+              dark: '#0B0F19',
+              panel: '#151B2C',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            crystal: '0 0 0 1px rgba(10,92,54,0.12), 0 12px 40px -12px rgba(15,23,42,0.25)',
+            'crystal-dark': '0 0 0 1px rgba(10,92,54,0.35), 0 16px 48px -12px rgba(0,0,0,0.55)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { color-scheme: light; }
+    .dark { color-scheme: dark; }
+    html { font-feature-settings: 'tnum' 1, 'ss01' 1; }
+    body { font-family: Inter, system-ui, sans-serif; }
+
+    /* Crystal facet hover — огранение */
+    .role-card {
+      position: relative;
+      isolation: isolate;
+      transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 280ms ease, border-color 200ms ease;
+      clip-path: polygon(4% 0, 100% 0, 100% 96%, 96% 100%, 0 100%, 0 4%);
+    }
+    .role-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(135deg, transparent 40%, rgba(10,92,54,0.08) 50%, transparent 60%),
+        linear-gradient(225deg, rgba(255,255,255,0.55) 0%, transparent 42%);
+      opacity: 0;
+      transition: opacity 280ms ease;
+      pointer-events: none;
+    }
+    .dark .role-card::before {
+      background:
+        linear-gradient(135deg, transparent 40%, rgba(10,92,54,0.25) 50%, transparent 60%),
+        linear-gradient(225deg, rgba(255,255,255,0.06) 0%, transparent 42%);
+    }
+    .role-card::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      z-index: -2;
+      background: linear-gradient(125deg, #0A5C36 0%, transparent 35%, transparent 65%, #64748B 100%);
+      opacity: 0;
+      transition: opacity 280ms ease;
+      clip-path: inherit;
+    }
+    .role-card:hover,
+    .role-card:focus-visible,
+    .role-card[aria-pressed="true"] {
+      transform: translateY(-4px) scale(1.015);
+      box-shadow: 0 20px 48px -16px rgba(10, 92, 54, 0.35);
+    }
+    .role-card:hover::before,
+    .role-card:focus-visible::before,
+    .role-card[aria-pressed="true"]::before,
+    .role-card:hover::after,
+    .role-card:focus-visible::after,
+    .role-card[aria-pressed="true"]::after {
+      opacity: 1;
+    }
+    .role-card .facet-glint {
+      position: absolute;
+      top: 0; left: -40%;
+      width: 35%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+      transform: skewX(-18deg);
+      transition: left 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+    }
+    .role-card:hover .facet-glint,
+    .role-card[aria-pressed="true"] .facet-glint { left: 120%; }
+
+    .shortcut-enter { animation: shortcutIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes shortcutIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-backdrop { animation: fadeIn 160ms ease both; }
+    .modal-panel { animation: modalUp 220ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modalUp {
+      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .logo-mark { color: #0F172A; }
+    .dark .logo-mark { color: #E2E8F0; }
+    .dark .logo-mark .logo-core,
+    .dark .logo-mark .logo-node,
+    .dark .logo-mark .logo-highlight { fill: #1FA86A; }
+    .dark .logo-mark .logo-edges { stroke: #1FA86A; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .role-card, .role-card::before, .role-card::after, .facet-glint, .shortcut-enter, .modal-backdrop, .modal-panel {
+        transition: none !important; animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-crystal text-slate-900 dark:bg-crystal-dark dark:text-slate-100 antialiased pb-24 md:pb-0">
+
+  <!-- ========== HEADER ========== -->
+  <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-crystal-panel/90">
+    <div class="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:h-16 sm:px-6">
+      <a href="index.html" class="logo-mark flex shrink-0 items-center gap-2.5" aria-label="УрФУ Digital Campus — на главную">
+        <svg class="h-9 w-9" viewBox="0 0 64 64" aria-hidden="true" fill="none">
+          <path class="logo-shell" d="M32 2.5 L54.5 15.5 V40.5 L32 53.5 L9.5 40.5 V15.5 Z" stroke="currentColor" stroke-width="2.25" stroke-linejoin="miter"/>
+          <path class="logo-facet" d="M32 10 L46 18 V34 L32 42 L18 34 V18 Z" stroke="currentColor" stroke-width="1.25" opacity="0.55"/>
+          <path class="logo-core" d="M32 16 L40.5 21 V31 L32 36 L23.5 31 V21 Z" fill="#0A5C36"/>
+          <circle class="logo-node" cx="32" cy="16" r="2.1" fill="#0A5C36"/>
+          <circle class="logo-node" cx="40.5" cy="21" r="2.1" fill="#0A5C36"/>
+          <circle class="logo-node" cx="40.5" cy="31" r="2.1" fill="#0A5C36"/>
+          <circle class="logo-node" cx="32" cy="36" r="2.1" fill="#0A5C36"/>
+          <circle class="logo-node" cx="23.5" cy="31" r="2.1" fill="#0A5C36"/>
+          <circle class="logo-node" cx="23.5" cy="21" r="2.1" fill="#0A5C36"/>
+          <circle class="logo-node" cx="32" cy="26" r="2.6" fill="#0A5C36"/>
+          <g class="logo-edges" stroke="#0A5C36" stroke-width="1.15" opacity="0.9">
+            <line x1="32" y1="16" x2="32" y2="36"/>
+            <line x1="23.5" y1="21" x2="40.5" y2="31"/>
+            <line x1="40.5" y1="21" x2="23.5" y2="31"/>
+          </g>
+          <path class="logo-highlight" d="M32 10 L39 14 L32 16 L25 14 Z" fill="#0A5C36" opacity="0.28"/>
+        </svg>
+        <span class="hidden sm:flex flex-col leading-none">
+          <span class="text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">УрФУ</span>
+          <span class="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-malachite">Digital Campus</span>
+        </span>
+      </a>
+
+      <button
+        type="button"
+        id="searchOpenBtn"
+        class="group ml-auto flex min-w-0 flex-1 max-w-md items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-500 transition hover:border-malachite/40 hover:bg-white dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-400 dark:hover:border-malachite/50 dark:hover:bg-slate-900"
+        aria-haspopup="dialog"
+        aria-controls="searchModal"
+      >
+        <svg class="h-4 w-4 shrink-0 text-slate-400 group-hover:text-malachite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+        </svg>
+        <span class="truncate">AI-поиск: программа, общежитие, справка…</span>
+        <kbd class="ml-auto hidden rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 dark:border-slate-600 dark:bg-slate-800 sm:inline">⌘K</kbd>
+      </button>
+
+      <button
+        type="button"
+        id="themeToggle"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-malachite/40 hover:text-malachite dark:border-slate-700 dark:text-slate-300 dark:hover:text-malachite"
+        aria-label="Переключить тему"
+      >
+        <svg id="iconSun" class="hidden h-5 w-5 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+        </svg>
+        <svg id="iconMoon" class="block h-5 w-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ========== HERO ========== -->
+    <section class="relative overflow-hidden border-b border-slate-200/70 dark:border-slate-800">
+      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(10,92,54,0.10),_transparent_55%)] dark:bg-[radial-gradient(ellipse_at_top,_rgba(10,92,54,0.18),_transparent_50%)]"></div>
+      <div class="pointer-events-none absolute inset-0 opacity-[0.035] dark:opacity-[0.06]" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Cpath d=%22M24 2L44 14v24L24 50L4 38V14z%22 fill=%22none%22 stroke=%22%230A5C36%22 stroke-width=%221%22/%3E%3C/svg%3E'); background-size:48px 48px;"></div>
+
+      <div class="relative mx-auto max-w-6xl px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-14">
+        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-malachite">Екатеринбург · Digital Campus</p>
+        <h1 class="max-w-3xl text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl sm:leading-[1.08]">
+          УрФУ — где задача закрывается за одну сессию
+        </h1>
+        <p class="mt-4 max-w-2xl text-base text-slate-600 dark:text-slate-300 sm:text-lg">
+          Подберите программу по баллам ЕГЭ, откройте расписание и сервисы кампуса или найдите лабораторию под R&amp;D — без канцелярита и «кладбища ссылок».
+        </p>
+
+        <div class="mt-10 grid gap-4 sm:grid-cols-3 sm:gap-5" role="tablist" aria-label="Выбор роли">
+          <!-- Applicant -->
+          <button type="button" class="role-card group rounded-xl border border-slate-200 bg-white p-5 text-left shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:p-6" data-role="applicant" role="tab" aria-selected="true" aria-pressed="true" id="role-applicant">
+            <span class="facet-glint" aria-hidden="true"></span>
+            <span class="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-malachite/10 text-malachite">
+              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+            </span>
+            <span class="block text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">Я Абитуриент</span>
+            <span class="mt-2 block text-sm leading-relaxed text-slate-500 dark:text-slate-400">Баллы → программа → кампус → подача за одну сессию</span>
+            <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-malachite">Начать подбор <span aria-hidden="true">→</span></span>
+          </button>
+
+          <!-- Student -->
+          <button type="button" class="role-card group rounded-xl border border-slate-200 bg-white p-5 text-left shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:p-6" data-role="student" role="tab" aria-selected="false" aria-pressed="false" id="role-student">
+            <span class="facet-glint" aria-hidden="true"></span>
+            <span class="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 19V7l8-4 8 4v12"/><path d="M4 7l8 4 8-4M12 11v10"/><path d="M8 14v4M16 14v4"/></svg>
+            </span>
+            <span class="block text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">Я Студент</span>
+            <span class="mt-2 block text-sm leading-relaxed text-slate-500 dark:text-slate-400">Расписание, справки и траектория — в 2 клика с телефона</span>
+            <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-malachite">Открыть кампус <span aria-hidden="true">→</span></span>
+          </button>
+
+          <!-- Partner -->
+          <button type="button" class="role-card group rounded-xl border border-slate-200 bg-white p-5 text-left shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:p-6" data-role="partner" role="tab" aria-selected="false" aria-pressed="false" id="role-partner">
+            <span class="facet-glint" aria-hidden="true"></span>
+            <span class="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+            </span>
+            <span class="block text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">Я Индустриальный партнёр</span>
+            <span class="mt-2 block text-sm leading-relaxed text-slate-500 dark:text-slate-400">R&amp;D, таланты и стартапы Урала — бриф за один визит</span>
+            <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-malachite">Найти вход <span aria-hidden="true">→</span></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ROLE SHORTCUTS ========== -->
+    <section class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12" aria-labelledby="shortcutsHeading">
+      <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-malachite" id="roleLabel">Абитуриент</p>
+          <h2 id="shortcutsHeading" class="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Быстрые задачи</h2>
+        </div>
+        <p id="roleHint" class="max-w-md text-sm text-slate-500 dark:text-slate-400">Time-to-First-Match ≤ 90 сек · без звонков в приёмную</p>
+      </div>
+      <div id="shortcutsGrid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="tabpanel" aria-labelledby="role-applicant"></div>
+    </section>
+
+    <!-- ========== MEDIA JOURNAL ========== -->
+    <section class="border-t border-slate-200/70 bg-white dark:border-slate-800 dark:bg-crystal-panel/40" aria-labelledby="mediaHeading">
+      <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+        <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-malachite">Медиа-журнал</p>
+            <h2 id="mediaHeading" class="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">Уральский цифровой исследователь</h2>
+            <p class="mt-2 max-w-xl text-sm text-slate-500 dark:text-slate-400">Реальные инфоповоды кампуса в Новокольцовском — не лента пресс-релизов, а сигналы экспертизы.</p>
+          </div>
+          <a href="pages/media.html" class="text-sm font-semibold text-malachite hover:underline">Все материалы →</a>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <article class="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-crystal dark:border-slate-700 dark:bg-crystal-dark sm:col-span-2 lg:col-span-2 lg:row-span-2">
+            <div class="relative min-h-[200px] flex-1 bg-gradient-to-br from-malachite via-malachite-700 to-slate-900 p-6 sm:min-h-[280px] sm:p-8">
+              <div class="absolute inset-0 opacity-20" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22%3E%3Cpath d=%22M32 4L56 18v28L32 60L8 46V18z%22 fill=%22none%22 stroke=%22white%22 stroke-width=%221%22/%3E%3C/svg%3E'); background-size:64px 64px;"></div>
+              <span class="relative inline-flex rounded-md bg-white/15 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-white backdrop-blur">Кампус</span>
+              <h3 class="relative mt-4 max-w-lg text-2xl font-bold leading-snug text-white sm:text-3xl">
+                <a href="pages/media.html" class="after:absolute after:inset-0">Вторая очередь кампуса в Новокольцовском: ИРИТ-РТФ, ИнЭУ и СУНЦ</a>
+              </h3>
+              <p class="relative mt-3 max-w-md text-sm text-white/80 sm:text-base">Губернатор Свердловской области подтвердил ввод трёх корпусов. Образовательный кластер открывается в 2026 году — лаборатории ИИ, ESG и цифрового моделирования.</p>
+              <time class="relative mt-6 block text-xs font-medium text-white/60" datetime="2025-12-09">9 декабря 2025</time>
+            </div>
+          </article>
+
+          <article class="rounded-xl border border-slate-200 bg-crystal p-5 transition hover:border-malachite/40 dark:border-slate-700 dark:bg-crystal-dark">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-malachite">Образование</span>
+            <h3 class="mt-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
+              <a href="pages/media.html" class="hover:text-malachite">УрФУ в пилоте новой системы высшего образования</a>
+            </h3>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Летом 2026 — набор на 134 программы базового и специализированного высшего. И. о. ректора Илья Обабков: вуз готов к пилоту.</p>
+            <time class="mt-4 block text-xs text-slate-400" datetime="2026-01-23">23 января 2026</time>
+          </article>
+
+          <article class="rounded-xl border border-slate-200 bg-crystal p-5 transition hover:border-malachite/40 dark:border-slate-700 dark:bg-crystal-dark">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-malachite">Приоритет-2030</span>
+            <h3 class="mt-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
+              <a href="pages/media.html" class="hover:text-malachite">Первая группа «Приоритет-2030»: ~830 млн ₽ на развитие</a>
+            </h3>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Точка пересборки уральской промышленности: от исследований до внедрения на площадках кампуса.</p>
+            <time class="mt-4 block text-xs text-slate-400" datetime="2025-11-24">24 ноября 2025</time>
+          </article>
+
+          <article class="rounded-xl border border-slate-200 bg-crystal p-5 transition hover:border-malachite/40 dark:border-slate-700 dark:bg-crystal-dark sm:col-span-2 lg:col-span-1">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-malachite">Международное</span>
+            <h3 class="mt-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
+              <a href="pages/media.html" class="hover:text-malachite">5 000+ иностранных студентов и Фестиваль молодёжи-2026</a>
+            </h3>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Екатеринбург, 11–17 сентября: УрФУ — партнёр события и центр подготовки волонтёров из 190 стран.</p>
+            <time class="mt-4 block text-xs text-slate-400" datetime="2026-04-20">20 апреля 2026</time>
+          </article>
+
+          <article class="rounded-xl border border-slate-200 bg-crystal p-5 transition hover:border-malachite/40 dark:border-slate-700 dark:bg-crystal-dark sm:col-span-2">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-malachite">Наука · B2B</span>
+            <h3 class="mt-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
+              <a href="pages/media.html" class="hover:text-malachite">Объём НИОКР 4,1 млрд ₽: 2,9 млрд — в интересах предприятий Урала</a>
+            </h3>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">По итогам 2025 года УрФУ усилил контрактную науку с индустрией региона. Для партнёров — каталог лабораторий и бриф со SLA 48 часов.</p>
+            <time class="mt-4 block text-xs text-slate-400" datetime="2026-01-15">Итоги 2025 · задачи 2026</time>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="border-t border-slate-200 bg-slate-900 text-slate-300 dark:border-slate-800">
+    <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-start sm:justify-between sm:px-6">
+      <div>
+        <p class="text-lg font-bold text-white">Уральский федеральный университет</p>
+        <p class="mt-1 text-sm text-slate-400">620002, Екатеринбург, ул. Мира, 19</p>
+        <p class="mt-3 text-xs text-slate-500">Прототип Digital Campus Ecosystem · конкурс редизайна</p>
+      </div>
+      <nav class="flex flex-wrap gap-x-6 gap-y-2 text-sm" aria-label="Нижняя навигация">
+        <a class="hover:text-white" href="pages/calculator.html">Калькулятор ЕГЭ</a>
+        <a class="hover:text-white" href="pages/program.html">Программная инженерия</a>
+        <a class="hover:text-white" href="pages/campus.html">Кампус</a>
+        <a class="hover:text-white" href="pages/dashboard.html">Дашборд</a>
+        <a class="hover:text-white" href="pages/services.html">Сервисы</a>
+        <a class="hover:text-white" href="pages/electives.html">Элективы</a>
+        <a class="hover:text-white" href="pages/career.html">Карьера</a>
+        <a class="hover:text-white" href="pages/business.html">R&amp;D / Лаборатории</a>
+        <a class="hover:text-white" href="pages/startups.html">Стартапы</a>
+        <a class="hover:text-white" href="pages/media.html">Медиа</a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- ========== MOBILE BOTTOM NAV ========== -->
+  <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden dark:border-slate-800 dark:bg-crystal-panel/95" aria-label="Мобильная навигация">
+    <ul class="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 py-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+      <li>
+        <a href="index.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-malachite">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5V20H4z"/></svg>
+          Главная
+        </a>
+      </li>
+      <li>
+        <button type="button" id="mobileSearchBtn" class="flex w-full flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          Поиск
+        </button>
+      </li>
+      <li>
+        <a href="pages/campus.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg>
+          Кампус
+        </a>
+      </li>
+      <li>
+        <a href="pages/services.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v18M5 8h14M7 12h10M9 16h6"/></svg>
+          Сервисы
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- ========== AI SEARCH MODAL ========== -->
+  <div id="searchModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="searchModalTitle">
+    <div class="modal-backdrop absolute inset-0 bg-slate-900/50 backdrop-blur-sm" data-close-search></div>
+    <div class="relative mx-auto flex min-h-full items-start justify-center px-4 pt-[12vh] sm:pt-[16vh]">
+      <div class="modal-panel w-full max-w-xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-crystal-panel">
+        <div class="flex items-center gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+          <svg class="h-5 w-5 shrink-0 text-malachite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <label for="searchInput" class="sr-only" id="searchModalTitle">Умный поиск УрФУ</label>
+          <input
+            id="searchInput"
+            type="search"
+            autocomplete="off"
+            placeholder="Спросите: «программы с информатикой и физикой»…"
+            class="w-full bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
+          />
+          <kbd class="hidden rounded border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-400 dark:border-slate-600 sm:inline">Esc</kbd>
+        </div>
+        <div id="searchResults" class="max-h-[50vh] overflow-y-auto p-2"></div>
+        <p class="border-t border-slate-100 px-4 py-2 text-[11px] text-slate-400 dark:border-slate-800">Сквозной AI-поиск по сущностям: программы · общежития · сервисы · лаборатории · люди</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const ROLE_DATA = {
+        applicant: {
+          label: 'Абитуриент',
+          hint: 'Time-to-First-Match ≤ 90 сек · без звонков в приёмную',
+          shortcuts: [
+            { title: 'Калькулятор ЕГЭ', desc: 'Баллы → ранжированный match программ ИРИТ-РТФ, ИНМТ, ИнЭУ', href: 'pages/calculator.html', cta: 'Рассчитать' },
+            { title: 'Гид по кампусу', desc: 'Новокольцовский: корпуса, общежития, расстояние до пар', href: 'pages/campus.html', cta: 'Открыть карту' },
+            { title: 'Направления', desc: 'Карьера выпускника, стоимость, CTA «Подать документы»', href: 'pages/program.html', cta: 'Смотреть' },
+            { title: 'Подача документов', desc: 'CTA на странице направления · дедлайны приёмной кампании', href: 'pages/program.html', cta: 'Старт' },
+          ],
+        },
+        student: {
+          label: 'Студент',
+          hint: 'Расписание ≤ 2 клика · справка end-to-end как в банке',
+          shortcuts: [
+            { title: 'Расписание', desc: 'Сегодня: пары, аудитории, изменения на текущий день', href: 'pages/dashboard.html', cta: 'Открыть' },
+            { title: 'Заказ справок', desc: 'Префилл данных, трекер: принята → готова → QR', href: 'pages/services.html', cta: 'Заказать' },
+            { title: 'Элективы', desc: 'Маркетплейс с фильтром кредитов и проверкой конфликтов', href: 'pages/electives.html', cta: 'Выбрать' },
+            { title: 'Карьерный хаб', desc: 'Вакансии и стажировки под курс и институт', href: 'pages/career.html', cta: 'Смотреть' },
+          ],
+        },
+        partner: {
+          label: 'Индустриальный партнёр',
+          hint: 'Time-to-Relevant-Lab ≤ 3 мин · SLA ответа на бриф 48 часов',
+          shortcuts: [
+            { title: 'Каталог лабораторий', desc: 'AI, materials, energy, industrial IoT — фильтр компетенций', href: 'pages/business.html', cta: 'Найти' },
+            { title: 'Бриф R&D', desc: 'Структурированная заявка + кастомный SLA-таймер', href: 'pages/business.html#brief', cta: 'Отправить' },
+            { title: 'Витрина талантов', desc: 'Хантинг выпускников и стажёров под стек компании', href: 'pages/career.html', cta: 'Открыть' },
+            { title: 'Стартапы УрФУ', desc: 'Стадия, рынок, CTA к фаундеру — не новости, а сделка', href: 'pages/startups.html', cta: 'Смотреть' },
+          ],
+        },
+      };
+
+      const SEARCH_INDEX = [
+        { q: ['егэ', 'баллы', 'калькулятор', 'программа', 'информатика', 'физика'], title: 'Калькулятор ЕГЭ и подбор программ', type: 'Продукт', href: 'pages/calculator.html', snippet: 'Введите баллы — получите match по ИРИТ-РТФ, ИНМТ и другим институтам.' },
+        { q: ['программная', 'инженерия', 'ирит', '09.03.04', 'контур', 'карьера'], title: '09.03.04 Программная инженерия · ИРИТ-РТФ', type: 'Направление', href: 'pages/program.html', snippet: 'Таймлайн курсов, карьера в Контуре/Сбере/Т-Банке, CTA подачи.' },
+        { q: ['общежитие', 'кампус', 'новокольцовский', 'жить'], title: 'Гид по кампусу и общежитиям', type: 'Кампус', href: 'pages/campus.html', snippet: 'Карта корпусов, фильтр комнат, расстояние до ИРИТ-РТФ.' },
+        { q: ['расписание', 'пары', 'сегодня', 'аудитория'], title: 'Дашборд студента · Расписание', type: 'Сервис', href: 'pages/dashboard.html', snippet: 'Виджет «Сегодня» с изменениями в реальном времени.' },
+        { q: ['справка', 'заказ', 'деканат', 'документы'], title: 'Заказ справок онлайн', type: 'Сервис', href: 'pages/services.html', snippet: 'Трекинг статуса как в банке: принята → готова → скачать.' },
+        { q: ['лаборатория', 'r&d', 'ниокр', 'партнёр', 'бизнес', 'ии', 'бриф', 'водород'], title: 'Портал для бизнеса · R&D лаборатории', type: 'B2B', href: 'pages/business.html', snippet: 'Match по отрасли, оборудованию, патентам · SLA брифа 8–72 ч.' },
+        { q: ['электив', 'траектория', 'запись'], title: 'Маркетплейс элективов', type: 'Учёба', href: 'pages/electives.html', snippet: 'Фильтры по кредитам, преподавателю, без конфликтов расписания.' },
+        { q: ['вакансия', 'стажировка', 'контур', 'сбер', 'т-банк', 'синара', 'отклик'], title: 'Карьерный хаб и стажировки', type: 'Карьера', href: 'pages/career.html', snippet: 'Отклик в 1 клик с профилем Ковалёва А.С. · Intern/Junior/Middle.' },
+        { q: ['стартап', 'инвестиции', 'seed', 'mrr', 'фаундер', 'nda'], title: 'Инвестиционная витрина стартапов', type: 'Invest', href: 'pages/startups.html', snippet: 'Seed/Round A, MRR, Data Room и NDA-префилл.' },
+        { q: ['приоритет', 'новости', 'фестиваль', 'медиа', 'материалы'], title: 'Медиа-журнал УрФУ', type: 'Медиа', href: 'pages/media.html', snippet: 'Приоритет-2030, материаловедение, кампус, Фестиваль молодёжи-2026.' },
+      ];
+
+      const html = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const shortcutsGrid = document.getElementById('shortcutsGrid');
+      const roleLabel = document.getElementById('roleLabel');
+      const roleHint = document.getElementById('roleHint');
+      const roleButtons = document.querySelectorAll('[data-role]');
+      const searchModal = document.getElementById('searchModal');
+      const searchInput = document.getElementById('searchInput');
+      const searchResults = document.getElementById('searchResults');
+
+      /* —— Theme —— */
+      const storedTheme = localStorage.getItem('urfu-theme');
+      if (storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        html.classList.add('dark');
+      }
+      themeToggle.addEventListener('click', () => {
+        const next = html.classList.toggle('dark') ? 'dark' : 'light';
+        localStorage.setItem('urfu-theme', next);
+      });
+
+      /* —— Role switcher —— */
+      function renderShortcuts(role) {
+        const data = ROLE_DATA[role];
+        roleLabel.textContent = data.label;
+        roleHint.textContent = data.hint;
+        shortcutsGrid.innerHTML = data.shortcuts.map((s, i) => `
+          <a href="${s.href}" class="shortcut-enter group flex flex-col rounded-xl border border-slate-200 bg-white p-4 transition hover:border-malachite/50 hover:shadow-crystal dark:border-slate-700 dark:bg-crystal-panel dark:hover:shadow-crystal-dark" style="animation-delay:${i * 40}ms">
+            <span class="text-base font-semibold text-slate-900 dark:text-white">${s.title}</span>
+            <span class="mt-1.5 flex-1 text-sm text-slate-500 dark:text-slate-400">${s.desc}</span>
+            <span class="mt-4 text-sm font-semibold text-malachite group-hover:underline">${s.cta} →</span>
+          </a>
+        `).join('');
+        shortcutsGrid.setAttribute('aria-labelledby', `role-${role}`);
+      }
+
+      function setRole(role, { scroll = false } = {}) {
+        roleButtons.forEach((btn) => {
+          const active = btn.dataset.role === role;
+          btn.setAttribute('aria-pressed', String(active));
+          btn.setAttribute('aria-selected', String(active));
+          btn.classList.toggle('ring-2', active);
+          btn.classList.toggle('ring-malachite', active);
+          btn.classList.toggle('border-malachite', active);
+        });
+        localStorage.setItem('urfu-role', role);
+        renderShortcuts(role);
+        if (scroll) {
+          document.getElementById('shortcutsHeading')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+
+      roleButtons.forEach((btn) => {
+        btn.addEventListener('click', () => setRole(btn.dataset.role, { scroll: true }));
+      });
+
+      const initialRole = localStorage.getItem('urfu-role') || 'applicant';
+      setRole(ROLE_DATA[initialRole] ? initialRole : 'applicant');
+
+      /* —— Search modal —— */
+      function openSearch() {
+        searchModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        renderSearchResults('');
+        requestAnimationFrame(() => searchInput.focus());
+      }
+      function closeSearch() {
+        searchModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        searchInput.value = '';
+      }
+
+      function renderSearchResults(query) {
+        const q = query.trim().toLowerCase();
+        const suggestions = !q
+          ? [
+              'программы с информатикой и физикой',
+              'общежитие рядом с ИРИТ-РТФ',
+              'заказать справку об обучении',
+              'лаборатория industrial IoT',
+            ]
+          : [];
+
+        let htmlOut = '';
+        if (suggestions.length) {
+          htmlOut += `<p class="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">AI-саггесты по JTBD</p>`;
+          htmlOut += suggestions.map((s) => `
+            <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-malachite/10 dark:text-slate-200 dark:hover:bg-malachite/20" data-suggest="${s}">
+              <span class="text-malachite">↗</span> ${s}
+            </button>
+          `).join('');
+        }
+
+        const hits = SEARCH_INDEX.filter((item) =>
+          !q || item.q.some((k) => k.includes(q) || q.includes(k)) || item.title.toLowerCase().includes(q)
+        );
+
+        if (q) {
+          htmlOut += `<p class="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Результаты</p>`;
+          if (!hits.length) {
+            htmlOut += `<p class="px-3 py-4 text-sm text-slate-500">Ничего не найдено. Попробуйте «ЕГЭ», «справка» или «лаборатория».</p>`;
+          } else {
+            htmlOut += hits.map((h) => `
+              <a href="${h.href}" class="block rounded-lg px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/80">
+                <span class="text-[10px] font-semibold uppercase tracking-wider text-malachite">${h.type}</span>
+                <span class="mt-0.5 block text-sm font-semibold text-slate-900 dark:text-white">${h.title}</span>
+                <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">${h.snippet}</span>
+              </a>
+            `).join('');
+          }
+        } else {
+          htmlOut += `<p class="mt-2 px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Популярные сущности</p>`;
+          htmlOut += SEARCH_INDEX.slice(0, 4).map((h) => `
+            <a href="${h.href}" class="block rounded-lg px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80">
+              <span class="text-sm font-medium text-slate-800 dark:text-slate-100">${h.title}</span>
+            </a>
+          `).join('');
+        }
+
+        searchResults.innerHTML = htmlOut;
+        searchResults.querySelectorAll('[data-suggest]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            searchInput.value = btn.dataset.suggest;
+            renderSearchResults(btn.dataset.suggest);
+            searchInput.focus();
+          });
+        });
+      }
+
+      document.getElementById('searchOpenBtn').addEventListener('click', openSearch);
+      document.getElementById('mobileSearchBtn').addEventListener('click', openSearch);
+      searchModal.querySelectorAll('[data-close-search]').forEach((el) => el.addEventListener('click', closeSearch));
+      searchInput.addEventListener('input', (e) => renderSearchResults(e.target.value));
+
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          searchModal.classList.contains('hidden') ? openSearch() : closeSearch();
+        }
+        if (e.key === 'Escape' && !searchModal.classList.contains('hidden')) closeSearch();
+      });
+    })();
+  </script>
+</body>
+</html>

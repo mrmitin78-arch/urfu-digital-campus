@@ -1,0 +1,373 @@
+<!-- UX_JUSTIFICATION: Закрывает барьер «Неявная связка баллы→программа» и Боль 5 (нет шортлиста) из UX_RESEARCH §Группа 1: слайдеры ЕГЭ → живой match с шансами на исторических проходных УрФУ; CTA «В шортлист»/«Подать» держат Happy Path Discovery→Match→Deep Dive. NSM: Match Completion Rate, Time-to-First-Match ≤90с. -->
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Калькулятор ЕГЭ УрФУ — подберите программу ИРИТ-РТФ, ИНМТ, ИнЭУ по баллам за 90 секунд." />
+  <title>Калькулятор ЕГЭ · УрФУ Digital Campus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            malachite: { DEFAULT: '#0A5C36', 50: '#E8F5EE', 100: '#C5E6D4', 600: '#0A5C36', 700: '#084A2B', 800: '#063820' },
+            graphite: { DEFAULT: '#0F172A', soft: '#334155', mute: '#64748B' },
+            crystal: { DEFAULT: '#F8FAFC', dark: '#0B0F19', panel: '#151B2C' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          boxShadow: {
+            crystal: '0 0 0 1px rgba(10,92,54,0.12), 0 12px 40px -12px rgba(15,23,42,0.25)',
+            'crystal-dark': '0 0 0 1px rgba(10,92,54,0.35), 0 16px 48px -12px rgba(0,0,0,0.55)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { color-scheme: light; }
+    .dark { color-scheme: dark; }
+    html { font-feature-settings: 'tnum' 1, 'ss01' 1; }
+    body { font-family: Inter, system-ui, sans-serif; }
+    .logo-mark { color: #0F172A; }
+    .dark .logo-mark { color: #E2E8F0; }
+    .dark .logo-mark .logo-core,
+    .dark .logo-mark .logo-node,
+    .dark .logo-mark .logo-highlight { fill: #1FA86A; }
+    .dark .logo-mark .logo-edges { stroke: #1FA86A; }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      height: 6px; border-radius: 4px;
+      background: linear-gradient(to right, #0A5C36 0%, #0A5C36 var(--fill, 70%), #e2e8f0 var(--fill, 70%), #e2e8f0 100%);
+    }
+    .dark input[type="range"] {
+      background: linear-gradient(to right, #1FA86A 0%, #1FA86A var(--fill, 70%), #334155 var(--fill, 70%), #334155 100%);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: #0A5C36; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); cursor: pointer;
+    }
+    .dark input[type="range"]::-webkit-slider-thumb { background: #1FA86A; border-color: #151B2C; }
+    .card-enter { animation: cardIn 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card-enter { animation: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-crystal text-slate-900 dark:bg-crystal-dark dark:text-slate-100 antialiased pb-24 md:pb-0">
+
+  <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-md dark:border-slate-800 dark:bg-crystal-panel/90">
+    <div class="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:h-16 sm:px-6">
+      <a href="../index.html" class="logo-mark flex shrink-0 items-center gap-2.5" aria-label="УрФУ Digital Campus — на главную">
+        <svg class="h-9 w-9" viewBox="0 0 64 64" aria-hidden="true" fill="none">
+          <path d="M32 2.5 L54.5 15.5 V40.5 L32 53.5 L9.5 40.5 V15.5 Z" stroke="currentColor" stroke-width="2.25" stroke-linejoin="miter"/>
+          <path d="M32 10 L46 18 V34 L32 42 L18 34 V18 Z" stroke="currentColor" stroke-width="1.25" opacity="0.55"/>
+          <path class="logo-core" d="M32 16 L40.5 21 V31 L32 36 L23.5 31 V21 Z" fill="#0A5C36"/>
+          <circle class="logo-node" cx="32" cy="26" r="2.6" fill="#0A5C36"/>
+          <g class="logo-edges" stroke="#0A5C36" stroke-width="1.15" opacity="0.9">
+            <line x1="32" y1="16" x2="32" y2="36"/>
+            <line x1="23.5" y1="21" x2="40.5" y2="31"/>
+            <line x1="40.5" y1="21" x2="23.5" y2="31"/>
+          </g>
+          <path class="logo-highlight" d="M32 10 L39 14 L32 16 L25 14 Z" fill="#0A5C36" opacity="0.28"/>
+        </svg>
+        <span class="hidden sm:flex flex-col leading-none">
+          <span class="text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">УрФУ</span>
+          <span class="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-malachite">Digital Campus</span>
+        </span>
+      </a>
+      <nav class="ml-4 hidden items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex" aria-label="Фаза абитуриента">
+        <a href="calculator.html" class="text-malachite" aria-current="page">Калькулятор</a>
+        <a href="program.html" class="hover:text-malachite">Направление</a>
+        <a href="campus.html" class="hover:text-malachite">Кампус</a>
+      </nav>
+      <div class="ml-auto flex items-center gap-2">
+        <span id="shortlistCount" class="hidden rounded-lg border border-malachite/30 bg-malachite/10 px-2.5 py-1 text-xs font-semibold text-malachite sm:inline">Шортлист: 0</span>
+        <button type="button" id="themeToggle" class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-malachite/40 hover:text-malachite dark:border-slate-700 dark:text-slate-300" aria-label="Переключить тему">
+          <svg id="iconSun" class="hidden h-5 w-5 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg id="iconMoon" class="block h-5 w-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <div class="mb-8">
+      <p class="text-xs font-semibold uppercase tracking-[0.16em] text-malachite">Абитуриент · шаг 1 из 3</p>
+      <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">Калькулятор ЕГЭ и подбор программ</h1>
+      <p class="mt-2 max-w-2xl text-sm text-slate-500 dark:text-slate-400 sm:text-base">Введите баллы — получите ранжированный match по ИРИТ-РТФ, ИНМТ и ИнЭУ на базе проходных УрФУ 2024–2025.</p>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-[340px_1fr] lg:gap-8">
+      <!-- SCORE PANEL -->
+      <aside class="h-fit rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-crystal-panel sm:p-6 lg:sticky lg:top-20">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ваши баллы ЕГЭ</h2>
+
+        <div class="mt-5 space-y-5">
+          <div>
+            <div class="mb-2 flex items-center justify-between gap-2">
+              <label for="mathScore" class="text-sm font-semibold text-slate-800 dark:text-slate-100">Математика (профиль)</label>
+              <input id="mathNum" type="number" min="0" max="100" value="78" class="w-14 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-center text-sm font-bold tabular-nums text-slate-900 outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+            </div>
+            <input id="mathScore" type="range" min="0" max="100" value="78" aria-valuemin="0" aria-valuemax="100" aria-valuenow="78" />
+          </div>
+
+          <div>
+            <div class="mb-2 flex items-center justify-between gap-2">
+              <label for="rusScore" class="text-sm font-semibold text-slate-800 dark:text-slate-100">Русский язык</label>
+              <input id="rusNum" type="number" min="0" max="100" value="82" class="w-14 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-center text-sm font-bold tabular-nums text-slate-900 outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+            </div>
+            <input id="rusScore" type="range" min="0" max="100" value="82" aria-valuemin="0" aria-valuemax="100" aria-valuenow="82" />
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-800 dark:text-slate-100">Третий предмет</label>
+            <div class="mb-3 flex flex-wrap gap-2" role="group" aria-label="Выбор третьего предмета">
+              <button type="button" data-subject="inf" class="subject-btn rounded-lg border border-malachite bg-malachite/10 px-3 py-1.5 text-xs font-semibold text-malachite">Информатика</button>
+              <button type="button" data-subject="phys" class="subject-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-malachite/40 dark:border-slate-600 dark:text-slate-300">Физика</button>
+              <button type="button" data-subject="soc" class="subject-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-malachite/40 dark:border-slate-600 dark:text-slate-300">Обществознание</button>
+            </div>
+            <div class="mb-2 flex items-center justify-between gap-2">
+              <label for="thirdScore" id="thirdLabel" class="text-sm text-slate-600 dark:text-slate-300">Информатика</label>
+              <input id="thirdNum" type="number" min="0" max="100" value="85" class="w-14 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-center text-sm font-bold tabular-nums text-slate-900 outline-none focus:border-malachite dark:border-slate-600 dark:bg-slate-900 dark:text-white" />
+            </div>
+            <input id="thirdScore" type="range" min="0" max="100" value="85" aria-valuemin="0" aria-valuemax="100" aria-valuenow="85" />
+          </div>
+        </div>
+
+        <div class="mt-6 rounded-lg bg-slate-50 p-4 dark:bg-slate-900/60">
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Сумма трёх предметов</p>
+          <p id="totalScore" class="mt-1 text-3xl font-extrabold tabular-nums text-malachite">245</p>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Без индивидуальных достижений · обновляется мгновенно</p>
+        </div>
+
+        <div class="mt-5">
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Институт</p>
+          <div class="flex flex-wrap gap-2" id="instFilters">
+            <button type="button" data-inst="all" class="inst-btn rounded-lg border border-malachite bg-malachite px-3 py-1.5 text-xs font-semibold text-white">Все</button>
+            <button type="button" data-inst="ИРИТ-РТФ" class="inst-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">ИРИТ-РТФ</button>
+            <button type="button" data-inst="ИНМТ" class="inst-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">ИНМТ</button>
+            <button type="button" data-inst="ИнЭУ" class="inst-btn rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">ИнЭУ</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RESULTS -->
+      <section aria-labelledby="resultsHeading">
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 id="resultsHeading" class="text-lg font-bold text-slate-900 dark:text-white">Подходящие направления</h2>
+            <p id="resultsMeta" class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Загрузка…</p>
+          </div>
+          <a href="campus.html" class="text-sm font-semibold text-malachite hover:underline">Смотреть общежития →</a>
+        </div>
+        <div id="programList" class="space-y-3" role="list"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="mt-8 border-t border-slate-200 bg-slate-900 text-slate-300 dark:border-slate-800">
+    <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <p class="text-sm text-slate-400">УрФУ · проходные ориентиры 2024–2025 · прототип Digital Campus</p>
+      <nav class="flex flex-wrap gap-4 text-sm">
+        <a class="hover:text-white" href="../index.html">Главная</a>
+        <a class="hover:text-white" href="program.html">Программная инженерия</a>
+        <a class="hover:text-white" href="campus.html">Кампус</a>
+      </nav>
+    </div>
+  </footer>
+
+  <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden dark:border-slate-800 dark:bg-crystal-panel/95" aria-label="Мобильная навигация">
+    <ul class="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 py-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+      <li><a href="../index.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10.5L12 4l8 6.5V20H4z"/></svg>Главная</a></li>
+      <li><a href="calculator.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h5M8 15h3"/></svg>ЕГЭ</a></li>
+      <li><a href="program.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V7l8-4 8 4v12"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>Программа</a></li>
+      <li><a href="campus.html" class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 hover:text-malachite"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg>Кампус</a></li>
+    </ul>
+  </nav>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const PROGRAMS = [
+        { id: 'se', code: '09.03.04', title: 'Программная инженерия', institute: 'ИРИТ-РТФ', subjects: ['inf', 'phys'], pass: 278, seats: 120, tuition: 198000, href: 'program.html', trend: [265, 271, 278] },
+        { id: 'is', code: '10.03.01', title: 'Информационная безопасность', institute: 'ИРИТ-РТФ', subjects: ['inf', 'phys'], pass: 268, seats: 45, tuition: 198000, href: 'program.html', trend: [255, 262, 268] },
+        { id: 'ai', code: '09.03.03', title: 'Прикладная информатика', institute: 'ИРИТ-РТФ', subjects: ['inf'], pass: 252, seats: 90, tuition: 185000, href: 'program.html', trend: [240, 246, 252] },
+        { id: 'cs', code: '09.03.01', title: 'Информатика и вычислительная техника', institute: 'ИРИТ-РТФ', subjects: ['inf', 'phys'], pass: 248, seats: 150, tuition: 185000, href: 'program.html', trend: [235, 242, 248] },
+        { id: 'radio', code: '11.03.01', title: 'Радиотехника', institute: 'ИРИТ-РТФ', subjects: ['phys'], pass: 218, seats: 80, tuition: 175000, href: 'program.html', trend: [210, 214, 218] },
+        { id: 'mechatronics', code: '15.03.06', title: 'Мехатроника и робототехника', institute: 'ИНМТ', subjects: ['phys', 'inf'], pass: 236, seats: 60, tuition: 190000, href: 'program.html', trend: [228, 232, 236] },
+        { id: 'materials', code: '22.03.01', title: 'Материаловедение и технологии материалов', institute: 'ИНМТ', subjects: ['phys'], pass: 205, seats: 55, tuition: 168000, href: 'program.html', trend: [198, 201, 205] },
+        { id: 'bi', code: '38.03.05', title: 'Бизнес-информатика', institute: 'ИнЭУ', subjects: ['inf', 'soc'], pass: 244, seats: 70, tuition: 210000, href: 'program.html', trend: [232, 238, 244] },
+        { id: 'mgmt', code: '38.03.02', title: 'Менеджмент', institute: 'ИнЭУ', subjects: ['soc'], pass: 228, seats: 100, tuition: 215000, href: 'program.html', trend: [220, 224, 228] },
+        { id: 'econ', code: '38.03.01', title: 'Экономика', institute: 'ИнЭУ', subjects: ['soc', 'math'], pass: 232, seats: 110, tuition: 215000, href: 'program.html', trend: [225, 229, 232] },
+      ];
+
+      const SUBJECT_LABELS = { inf: 'Информатика', phys: 'Физика', soc: 'Обществознание' };
+
+      const html = document.documentElement;
+      const storedTheme = localStorage.getItem('urfu-theme');
+      if (storedTheme === 'dark' || (!storedTheme && matchMedia('(prefers-color-scheme: dark)').matches)) {
+        html.classList.add('dark');
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        localStorage.setItem('urfu-theme', html.classList.toggle('dark') ? 'dark' : 'light');
+      });
+
+      let thirdSubject = 'inf';
+      let instFilter = 'all';
+      let shortlist = new Set(JSON.parse(localStorage.getItem('urfu-shortlist') || '[]'));
+
+      const mathScore = document.getElementById('mathScore');
+      const rusScore = document.getElementById('rusScore');
+      const thirdScore = document.getElementById('thirdScore');
+      const mathNum = document.getElementById('mathNum');
+      const rusNum = document.getElementById('rusNum');
+      const thirdNum = document.getElementById('thirdNum');
+      const totalEl = document.getElementById('totalScore');
+      const listEl = document.getElementById('programList');
+      const metaEl = document.getElementById('resultsMeta');
+      const shortlistCount = document.getElementById('shortlistCount');
+
+      function syncRangeFill(el) {
+        const pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+        el.style.setProperty('--fill', pct + '%');
+        el.setAttribute('aria-valuenow', el.value);
+      }
+
+      function bindPair(range, num) {
+        const sync = (from) => {
+          const v = Math.max(0, Math.min(100, Number(from.value) || 0));
+          range.value = v;
+          num.value = v;
+          syncRangeFill(range);
+          render();
+        };
+        range.addEventListener('input', () => sync(range));
+        num.addEventListener('input', () => sync(num));
+        syncRangeFill(range);
+      }
+
+      bindPair(mathScore, mathNum);
+      bindPair(rusScore, rusNum);
+      bindPair(thirdScore, thirdNum);
+
+      document.querySelectorAll('.subject-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          thirdSubject = btn.dataset.subject;
+          document.getElementById('thirdLabel').textContent = SUBJECT_LABELS[thirdSubject];
+          document.querySelectorAll('.subject-btn').forEach((b) => {
+            const on = b.dataset.subject === thirdSubject;
+            b.classList.toggle('border-malachite', on);
+            b.classList.toggle('bg-malachite/10', on);
+            b.classList.toggle('text-malachite', on);
+            b.classList.toggle('border-slate-200', !on);
+            b.classList.toggle('dark:border-slate-600', !on);
+            b.classList.toggle('text-slate-600', !on);
+          });
+          render();
+        });
+      });
+
+      document.querySelectorAll('.inst-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          instFilter = btn.dataset.inst;
+          document.querySelectorAll('.inst-btn').forEach((b) => {
+            const on = b.dataset.inst === instFilter;
+            b.classList.toggle('bg-malachite', on);
+            b.classList.toggle('text-white', on);
+            b.classList.toggle('border-malachite', on);
+            b.classList.toggle('text-slate-600', !on);
+            b.classList.toggle('dark:text-slate-300', !on);
+          });
+          render();
+        });
+      });
+
+      function chance(total, pass) {
+        const delta = total - pass;
+        if (delta >= 8) return { key: 'high', label: 'Высокий', cls: 'bg-malachite/15 text-malachite border-malachite/30' };
+        if (delta >= -5) return { key: 'mid', label: 'Средний', cls: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600' };
+        return { key: 'low', label: 'Низкий', cls: 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700' };
+      }
+
+      function updateShortlistUI() {
+        shortlistCount.textContent = 'Шортлист: ' + shortlist.size;
+        shortlistCount.classList.toggle('hidden', shortlist.size === 0);
+        shortlistCount.classList.toggle('sm:inline', shortlist.size > 0);
+      }
+
+      function render() {
+        const math = Number(mathScore.value);
+        const rus = Number(rusScore.value);
+        const third = Number(thirdScore.value);
+        const total = math + rus + third;
+        totalEl.textContent = String(total);
+
+        const items = PROGRAMS
+          .filter((p) => {
+            if (instFilter !== 'all' && p.institute !== instFilter) return false;
+            return p.subjects.includes(thirdSubject);
+          })
+          .map((p) => ({ ...p, ch: chance(total, p.pass), delta: total - p.pass }))
+          .sort((a, b) => b.delta - a.delta);
+
+        metaEl.textContent = items.length
+          ? `${items.length} программ · сумма ${total} · предмет: ${SUBJECT_LABELS[thirdSubject]}`
+          : `Нет программ под «${SUBJECT_LABELS[thirdSubject]}» — смените предмет или институт`;
+
+        listEl.innerHTML = items.map((p, i) => {
+          const saved = shortlist.has(p.id);
+          return `
+          <article class="card-enter rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-malachite/40 dark:border-slate-700 dark:bg-crystal-panel sm:p-5" style="animation-delay:${i * 30}ms" role="listitem" data-id="${p.id}">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-[11px] font-semibold uppercase tracking-wider text-malachite">${p.institute}</span>
+                  <span class="text-[11px] tabular-nums text-slate-400">${p.code}</span>
+                </div>
+                <h3 class="mt-1 text-base font-bold text-slate-900 dark:text-white sm:text-lg">${p.title}</h3>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Проходной ${p.pass} · динамика ${p.trend.join(' → ')} · бюджет ${p.seats} мест · контракт ${p.tuition.toLocaleString('ru-RU')} ₽/год
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <span class="rounded-lg border px-2.5 py-1 text-xs font-bold ${p.ch.cls}">Шанс: ${p.ch.label}</span>
+                <span class="text-[11px] tabular-nums text-slate-400">${p.delta >= 0 ? '+' : ''}${p.delta} к проходному</span>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button type="button" data-shortlist="${p.id}" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold transition dark:border-slate-600 ${saved ? 'border-malachite bg-malachite/10 text-malachite' : 'text-slate-700 hover:border-malachite/40 dark:text-slate-200'}">${saved ? 'В шортлисте ✓' : 'В шортлист'}</button>
+              <a href="${p.href}" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-malachite/40 dark:border-slate-600 dark:text-slate-200">Подробнее</a>
+              <a href="${p.href}#apply" class="rounded-lg bg-malachite px-3 py-2 text-sm font-semibold text-white hover:bg-malachite-700">Подать документы</a>
+            </div>
+          </article>`;
+        }).join('');
+
+        listEl.querySelectorAll('[data-shortlist]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.shortlist;
+            if (shortlist.has(id)) shortlist.delete(id);
+            else shortlist.add(id);
+            localStorage.setItem('urfu-shortlist', JSON.stringify([...shortlist]));
+            updateShortlistUI();
+            render();
+          });
+        });
+      }
+
+      updateShortlistUI();
+      render();
+    })();
+  </script>
+</body>
+</html>
